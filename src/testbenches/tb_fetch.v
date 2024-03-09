@@ -3,7 +3,7 @@
 module tb_fetch();
 
     // INPUTS
-    reg         clk;
+    reg         i_clock;
     reg         reset;
     reg         valid;
     reg         halt;
@@ -12,7 +12,7 @@ module tb_fetch();
     reg         pc_src;
     
     initial begin
-        clk   = 1'b0;
+        i_clock = 1'b0;
         halt  = 1'b0;
         reset = 1'b1;
         pc_salto = 1'b0;
@@ -21,22 +21,22 @@ module tb_fetch();
         valid = 1'b0;
 
         #20
-        reset = 1'b0; 
-        
+        reset = 1'b0;
+
         #40 
         valid = 1'b1;
-        
+
         #100
         halt = 1'b1;
         #20
         $finish;
     end
  
-    always #10 clk = ~clk;  // Simulacion de clock 100MHz
+    always #10 i_clock = ~i_clock;  // Simulacion de clock 100MHz
 
-    fetch u_fetch
+    fetch_stage u_fetch
     (
-        .i_clk(clk), .i_reset(reset), .i_valid(valid), 
+        .i_clock(i_clock), .i_reset(reset), .i_valid(valid), 
         .i_halt(halt), .i_pc_salto(pc_salto), .i_stall(stall),
         .i_pc_src(pc_src),
         .o_pc_4(o_pc_4)
