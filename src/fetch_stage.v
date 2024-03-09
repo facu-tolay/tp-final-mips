@@ -5,40 +5,56 @@ module fetch_stage
     parameter N_BITS_REG    = 5
 )
 (
-    input wire [N_BITS      -1:0]   i_pc_salto,
-    input wire                      i_halt,
-    input wire                      i_stall,
-    input wire                      i_pc_src,    //señal de control
-    input wire                      i_step,      //ejecutar un paso
-    input wire                      i_clock,
-    input wire                      i_reset,
-    input wire                      i_valid,
+    input wire [N_BITS      -1:0]   i_pc_salto      ,
+    input wire                      i_halt          ,
+    input wire                      i_stall         ,
+    input wire                      i_pc_src        ,
+    input wire                      i_clock         ,
+    input wire                      i_reset         ,
+    input wire                      i_valid         ,
 
-    output reg [N_BITS      -1:0]   o_pc_4,
-    output reg                      o_halt,
-    output reg [N_BITS      -1:0]   o_instruction,
-    output reg [N_BITS_REG  -1:0]   o_rs,
+    output reg [N_BITS      -1:0]   o_pc_4          ,
+    output reg                      o_halt          ,
+    output reg [N_BITS      -1:0]   o_instruction   ,
+    output reg [N_BITS_REG  -1:0]   o_rs            ,
     output reg [N_BITS_REG  -1:0]   o_rt
 );
 
     reg  [N_BITS-1:0] pc;
     wire [N_BITS-1:0] instruction;
 
-    always@(posedge i_clock)begin: read_inst
+    ram_memory
+    #(
+        .RAM_WIDTH       (32            ),
+        .RAM_DEPTH       (2048          )
+    )
+    u_program_memory
+    (
+        .o_instruction  (instruction    ),
+        .i_address      (pc             ),
+        .i_clock        (i_clock        ),
+        .i_reset        (i_reset        ),
+        .i_valid        (i_valid        )
+    );
+
+    always@(posedge i_clock)begin: pc_update
         if(i_reset) begin
             pc <= {N_BITS{1'b0}};
         end
         else if(i_valid) begin // decide el valor del PC
-            if(i_pc_src)
+            if(i_pc_src) begin
                 pc <= i_pc_salto;
-            else if(~i_halt && ~i_stall)
+            end
+            else if(~i_halt && ~i_stall) begin
                 pc <= pc + 1;
-            else
+            end
+            else begin
                 pc <= pc;
+            end
         end
     end
 
-    always@(negedge i_clock)begin: write_inst
+    always@(negedge i_clock)begin: output_block
         if(i_reset) begin
             o_pc_4 <= 1'b1;
         end

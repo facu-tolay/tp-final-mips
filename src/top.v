@@ -17,20 +17,19 @@ module top
     )
     u_fetch_stage
     (
-        .i_pc_salto         (           ),
-        .i_halt             (           ),
-        .i_stall            (           ),
-        .i_pc_src           (           ),
-        .i_step             (           ),
-        .i_valid            (           ),
-        .i_reset            (i_reset    ),
-        .i_clock            (i_clock    ),
-
         .o_pc_4             (           ),
         .o_halt             (           ),
         .o_instruction      (           ),
         .o_rs               (o_data     ),
-        .o_rt               (           )
+        .o_rt               (           ),
+
+        .i_pc_salto         (           ),
+        .i_halt             (1'b0       ),
+        .i_stall            (1'b0       ),
+        .i_pc_src           (1'b0       ),
+        .i_valid            (1'b1       ),
+        .i_clock            (i_clock    ),
+        .i_reset            (i_reset    )
     );
 
     // --------------------------------------------------
