@@ -3,14 +3,27 @@
 
 module top
 #(
-    parameter   NB_DATA   = 5
+    parameter   NB_DATA   = 6
 )
 (
+    input wire                      i_switch        ,
     input wire                      i_clock         ,
     input wire                      i_reset         ,
 
-    output wire [NB_DATA   - 1 : 0] o_data
+    output wire [NB_DATA - 1 : 0]   o_data
 );
+
+    switch_debounce
+    #(
+    )
+    u_switch_debounce
+    (
+        .o_signal           (o_data[5] ),
+
+        .i_switch           (i_switch  ),
+        .i_clock            (i_clock   ),
+        .i_reset            (i_reset   )
+    );
 
     fetch_stage
     #(
@@ -20,7 +33,7 @@ module top
         .o_pc_4             (           ),
         .o_halt             (           ),
         .o_instruction      (           ),
-        .o_rs               (o_data     ),
+        .o_rs               (o_data[4:0]),
         .o_rt               (           ),
 
         .i_pc_salto         (           ),
