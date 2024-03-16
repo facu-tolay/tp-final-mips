@@ -1,46 +1,48 @@
 
 module decode_stage
 #(
-    parameter N_BITS      = 32,
-    parameter N_BITS_REG  = 5
+    parameter NB_DATA     = 32,
+    parameter NB_REGISTER = 5
 )
 (
-    output wire [N_BITS_REG -1 : 0] o_rs                ,
-    output wire [N_BITS_REG -1 : 0] o_rd                ,
-    output wire [N_BITS_REG -1 : 0] o_rt                ,
-    output wire [N_BITS_REG -1 : 0] o_sa                ,
-    output wire [N_BITS_REG    : 0] o_opcode            ,
-    output wire [N_BITS     -1 : 0] o_pc_next           ,
-    output wire [N_BITS     -1 : 0] o_data_read_reg_0   ,
-    output wire [N_BITS     -1 : 0] o_data_read_reg_1   ,
-    output wire [N_BITS     -1 : 0] o_extended          ,
-    output wire [N_BITS     -7 : 0] o_instruction_index ,
+    output wire [NB_REGISTER -1 : 0] o_rs                   ,
+    output wire [NB_REGISTER -1 : 0] o_rd                   ,
+    output wire [NB_REGISTER -1 : 0] o_rt                   ,
+    output wire [NB_REGISTER -1 : 0] o_sa                   ,
+    output wire [NB_REGISTER    : 0] o_opcode               ,
+    output wire [NB_DATA     -1 : 0] o_pc_next              ,
+    output wire [NB_DATA     -1 : 0] o_data_read_reg_0      ,
+    output wire [NB_DATA     -1 : 0] o_data_read_reg_1      ,
+    output wire [NB_DATA     -1 : 0] o_extended             ,
+    output wire [NB_DATA     -7 : 0] o_instruction_index    ,
 
     //INPUTS
-    input wire [N_BITS      -1 : 0] i_instruction       ,
-    input wire [N_BITS      -1 : 0] i_pc_next           ,
-    input wire [N_BITS      -1 : 0] i_data_reg_write    ,
-    input wire [N_BITS_REG  -1 : 0] i_data_reg_write_sel,
-    input wire                      i_reg_write         ,
-    input wire                      i_valid             ,
-    input wire                      i_reset             ,
-    input wire                      i_clock
+    input wire [NB_DATA      -1 : 0] i_instruction          ,
+    input wire [NB_DATA      -1 : 0] i_pc_next              ,
+    input wire [NB_DATA      -1 : 0] i_data_reg_write       ,
+    input wire [NB_REGISTER  -1 : 0] i_data_reg_write_sel   ,
+    input wire                       i_write_reg_enable     ,
+    input wire                       i_valid                ,
+    input wire                       i_reset                ,
+    input wire                       i_clock
 );
 
-    wire [N_BITS        -1  : 0] data_read_reg_0;
-    wire [N_BITS        -1  : 0] data_read_reg_1;
+    wire [NB_DATA       -1  : 0] data_read_reg_0;
+    wire [NB_DATA       -1  : 0] data_read_reg_1;
 
-    reg [N_BITS         -1  : 0] instruction;
-    reg [N_BITS         -1  : 0] pc_next;
-    reg [N_BITS_REG     -1  : 0] rs;
-    reg [N_BITS_REG     -1  : 0] rt;
-    reg [N_BITS_REG     -1  : 0] rd;
-    reg [N_BITS_REG     -1  : 0] sa;
-    reg [N_BITS         -17 : 0] offset;
-    reg [N_BITS         -1  : 0] data_reg_write;
-    reg [N_BITS         -13 : 0] instruction_index;
+    reg [NB_DATA        -1  : 0] instruction;
+    reg [NB_DATA        -1  : 0] pc_next;
+    reg [NB_REGISTER    -1  : 0] rs;
+    reg [NB_REGISTER    -1  : 0] rt;
+    reg [NB_REGISTER    -1  : 0] rd;
+    reg [NB_REGISTER    -1  : 0] sa;
+    reg [NB_DATA        -17 : 0] offset;
+    reg [NB_DATA        -1  : 0] data_reg_write;
+    reg [NB_DATA        -13 : 0] instruction_index;
 
-
+    // --------------------------------------------------
+    // PC + 1 delay
+    // --------------------------------------------------
     always @(posedge i_clock) begin: reg_pc_next
         if(i_reset) begin
             pc_next <= 32'b0;
@@ -50,6 +52,9 @@ module decode_stage
         end
     end
 
+    // --------------------------------------------------
+    // Instruction delay
+    // --------------------------------------------------
     always @(posedge i_clock) begin: reg_instruction
         if(i_reset) begin
             instruction <= 32'b0;
@@ -122,25 +127,27 @@ module decode_stage
         end
     end
 
+    // --------------------------------------------------
+    // Register bank
+    // --------------------------------------------------
+    register_bank u_register_bank
+    (
+        .o_data_read_reg_0  (data_read_reg_0        ),
+        .o_data_read_reg_1  (data_read_reg_1        ),
 
-    // FIXME placeholder
-    // register_bank u_register_bank
-    // (
-    //     .o_data_read_reg_0  (data_read_reg_0        ),
-    //     .o_data_read_reg_1  (data_read_reg_1        ),
+        .i_read_reg_sel_0   (rs                     ),
+        .i_read_reg_sel_1   (rt                     ),
+        .i_write_reg_sel    (i_data_reg_write_sel   ),
+        .i_write_reg_data   (data_reg_write         ),
+        .i_write_reg_enable (i_write_reg_enable     ),
+        .i_valid            (i_valid                ),
+        .i_reset            (i_reset                ),
+        .i_clock            (i_clock                )
+    );
 
-    //     .i_read_reg_sel_0   (rs                     ),
-    //     .i_read_reg_sel_1   (rt                     ),
-    //     .i_write_reg_sel    (i_data_reg_write_sel   ),
-    //     .i_write_reg_data   (data_reg_write         ),
-    //     .i_reg_write        (i_reg_write            ),
-    //     .i_valid            (i_valid                ),
-    //     .i_reset            (i_reset                ),
-    //     .i_clock            (i_clock                )
-    // );
-
-
+    // --------------------------------------------------
     // Output assignments
+    // --------------------------------------------------
     assign o_pc_next            = pc_next;
 
     assign o_rs                 = rs;
@@ -149,7 +156,7 @@ module decode_stage
     assign o_sa                 = sa;
     assign o_instruction_index  = instruction_index;
 
-    assign o_extended           = {{(N_BITS-16){offset[15]}},offset};
+    assign o_extended           = {{(NB_DATA-16){offset[15]}}, offset};
 
     assign o_data_read_reg_0    = data_read_reg_0;
     assign o_data_read_reg_1    = data_read_reg_1;

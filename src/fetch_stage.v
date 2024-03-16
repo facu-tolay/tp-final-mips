@@ -1,27 +1,27 @@
 
 module fetch_stage
 #(
-    parameter N_BITS        = 32,
-    parameter N_BITS_REG    = 5
+    parameter NB_DATA       = 32,
+    parameter NB_REGISTER   = 5
 )
 (
-    input wire [N_BITS      -1:0]   i_pc_salto      ,
+    output reg [NB_DATA     -1 : 0] o_pc_next       ,
+    output reg [NB_DATA     -1 : 0] o_instruction   ,
+    output reg [NB_REGISTER -1 : 0] o_rs            ,
+    output reg [NB_REGISTER -1 : 0] o_rt            ,
+    output reg                      o_halt          ,
+
+    input wire [NB_DATA     -1 : 0] i_pc_salto      ,
     input wire                      i_halt          ,
     input wire                      i_stall         ,
     input wire                      i_pc_src        ,
-    input wire                      i_clock         ,
-    input wire                      i_reset         ,
     input wire                      i_valid         ,
-
-    output reg [N_BITS      -1:0]   o_pc_next       ,
-    output reg                      o_halt          ,
-    output reg [N_BITS      -1:0]   o_instruction   ,
-    output reg [N_BITS_REG  -1:0]   o_rs            ,
-    output reg [N_BITS_REG  -1:0]   o_rt
+    input wire                      i_reset         ,
+    input wire                      i_clock
 );
 
-    reg  [N_BITS-1:0] pc;
-    wire [N_BITS-1:0] instruction;
+    reg  [NB_DATA -1 : 0] pc;
+    wire [NB_DATA -1 : 0] instruction;
 
     ram_memory
     #(
@@ -39,7 +39,7 @@ module fetch_stage
 
     always @(posedge i_clock) begin: pc_update
         if(i_reset) begin
-            pc <= {N_BITS{1'b0}};
+            pc <= {NB_DATA {1'b0}};
         end
         else if(i_valid) begin // decide el valor del PC
             if(i_pc_src) begin
@@ -54,17 +54,48 @@ module fetch_stage
         end
     end
 
-    // FIXME mejorar este always
-    always @(negedge i_clock) begin: output_block
+    always @(negedge i_clock) begin
         if(i_reset) begin
-            o_pc_next <= 1'b1;
+            o_pc_next <= {NB_DATA {1'b0}};
         end
         else if(i_valid && ~i_stall) begin
-            o_pc_next     <= pc;
+            o_pc_next <= pc;
+        end
+    end
+
+    always @(negedge i_clock) begin
+        if(i_reset) begin
+            o_instruction <= {NB_DATA {1'b0}};
+        end
+        else if(i_valid && ~i_stall) begin
             o_instruction <= instruction;
-            o_halt        <= i_halt;
-            o_rs          <= instruction[25:21];
-            o_rt          <= instruction[20:16];
+        end
+    end
+
+    always @(negedge i_clock) begin
+        if(i_reset) begin
+            o_rs <= {NB_REGISTER {1'b0}};
+        end
+        else if(i_valid && ~i_stall) begin
+            o_rs <= instruction[25:21];
+        end
+    end
+
+    always @(negedge i_clock) begin
+        if(i_reset) begin
+            o_rt <= {NB_REGISTER {1'b0}};
+        end
+        else if(i_valid && ~i_stall) begin
+            o_rt <= instruction[20:16];
+        end
+    end
+
+    always @(negedge i_clock) begin
+        if(i_reset) begin
+            o_halt <= 1'b1;
+        end
+        else if(i_valid && ~i_stall) begin
+            o_halt <= i_halt;
         end
     end
 
