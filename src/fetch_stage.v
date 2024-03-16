@@ -13,7 +13,7 @@ module fetch_stage
     input wire                      i_reset         ,
     input wire                      i_valid         ,
 
-    output reg [N_BITS      -1:0]   o_pc_4          ,
+    output reg [N_BITS      -1:0]   o_pc_next       ,
     output reg                      o_halt          ,
     output reg [N_BITS      -1:0]   o_instruction   ,
     output reg [N_BITS_REG  -1:0]   o_rs            ,
@@ -37,7 +37,7 @@ module fetch_stage
         .i_valid        (i_valid        )
     );
 
-    always@(posedge i_clock)begin: pc_update
+    always @(posedge i_clock) begin: pc_update
         if(i_reset) begin
             pc <= {N_BITS{1'b0}};
         end
@@ -54,12 +54,13 @@ module fetch_stage
         end
     end
 
-    always@(negedge i_clock)begin: output_block
+    // FIXME mejorar este always
+    always @(negedge i_clock) begin: output_block
         if(i_reset) begin
-            o_pc_4 <= 1'b1;
+            o_pc_next <= 1'b1;
         end
         else if(i_valid && ~i_stall) begin
-            o_pc_4        <= pc + 1;
+            o_pc_next     <= pc;
             o_instruction <= instruction;
             o_halt        <= i_halt;
             o_rs          <= instruction[25:21];

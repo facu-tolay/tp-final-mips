@@ -30,7 +30,7 @@ module top
     )
     u_fetch_stage
     (
-        .o_pc_4             (           ),
+        .o_pc_next          (           ),
         .o_halt             (           ),
         .o_instruction      (           ),
         .o_rs               (o_data[4:0]),
