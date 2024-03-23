@@ -1,6 +1,10 @@
 `timescale 1ns / 1ps
 
-// Verifica que a cada ciclo con valid incremente el PC en 1
+// TB_FETCH_02
+//      Verifica que cada ciclo con valid 1 se incremente el PC en 1.
+//      Setear input_pc_source=1 y input_pc_next=rand y verificar que se mantenga el valor
+//      Luego setear input_pc_source=0 y verificar que se incremente desde el valor random
+//      Repetir con N valores random
 
 `define assert(value) \
     if (!value) begin \
@@ -9,16 +13,10 @@
         $finish; \
     end \
 
-module tb_fetch_00();
+module tb_fetch_02();
 
     localparam NB_DATA       = 32;
     localparam NB_REGISTER   = 5;
-
-    // wire        tx_data;
-    // reg [7:0]   alu_A;
-    // reg [7:0]   alu_B;
-    // reg [5:0]   alu_OPCODE;
-    // reg [5:0]   array_OPCODE [0:7];
 
     wire [NB_DATA       -1 : 0] out_pc_next     ;
     reg  [NB_DATA       -1 : 0] last_pc         ;
@@ -46,40 +44,16 @@ module tb_fetch_00();
     reg reset;
     task reset_dut;
         begin
+            // delayed reset
+            repeat (2) begin
+                @(posedge clock);
+            end
+
             reset = 1'b1;
             repeat (5) begin
                 @(posedge clock);
             end
             reset = 1'b0;
-        end
-    endtask
-
-    // --------------------------------------------------
-    // Data Send UART block
-    // --------------------------------------------------
-    reg rx_data;
-    integer i;
-    task send_one_bit_uart;
-        input wire bit_to_send;
-        begin
-            // segun un baudrate de 9600 y haciendo de cuenta que el clock es de 100mhz,
-            // el tiempo de cada bit es por cada N clocks x M ticks (N=650, M=16)
-            rx_data = bit_to_send;
-            repeat (650*16) begin
-                @(posedge clock);
-            end
-        end
-    endtask
-
-    task send_data_to_rx;
-        input [7:0] i_data;
-
-        begin
-            send_one_bit_uart(1'b0); // start bit
-            for(i=0; i<8; i=i+1) begin
-                send_one_bit_uart(i_data[i]);
-            end
-            send_one_bit_uart(1'b1); // stop bit
         end
     endtask
 
@@ -106,71 +80,56 @@ module tb_fetch_00();
 
     initial begin
 
-        //Definicion OPCODE
-        // array_OPCODE[0] = 6'b100000;    //ADD
-        // array_OPCODE[1] = 6'b100010;    //SUB
-        // array_OPCODE[2] = 6'b100100;    //AND
-        // array_OPCODE[3] = 6'b100101;    //OR
-        // array_OPCODE[4] = 6'b100110;    //XOR
-        // array_OPCODE[5] = 6'b000011;    //SRA
-        // array_OPCODE[6] = 6'b000010;    //SRL
-        // array_OPCODE[7] = 6'b100111;    //NOR
-
-        i = 0;
-
         valid           = 1'b0;
         input_stall     = 1'b0;
         input_pc_source = 1'b0;
+        input_pc_next   = 31'b0;
         last_pc         = 32'b0;
 
-        //Generacion de numeros random
-        // alu_A = $random();
-        // alu_B = $urandom();
-        // alu_OPCODE = array_OPCODE[$urandom()%8];
-
-        //Comienzo de test
+        // Comienzo de test
         $display("############# Test START ############\n");
         reset = 1'b0;
-        clock = 1'b0;
+        clock = 1'b1;
 
         reset_dut();
         valid = 1'b1;
 
+        // initial transitions
         repeat(10) begin
             @(posedge clock);
 
-            $display("checking assertion | PC = <%h> | last = <%h>", out_pc_next, last_pc);
             `assert(out_pc_next == last_pc+1);
-
             last_pc = out_pc_next;
         end
 
-        // send_one_bit_uart(1'b1);
+        repeat(10) begin
 
-        // send_data_to_rx(alu_A);
+            // set pc_src=1 y pc_next=rand --> verificar que se mantiene en ese valor
+            input_pc_source = 1'b1;
+            input_pc_next = $urandom();
+            last_pc = input_pc_next;
+            $display("setting pc_src = 1 | pc_next = <%h>", input_pc_next);
 
-        // send_one_bit_uart(1'b1); // stop bit
+            repeat(10) begin
+                @(posedge clock);
 
-        // send_data_to_rx(alu_B);
+                `assert(out_pc_next == last_pc);
+            end
 
-        // send_one_bit_uart(1'b1); // stop bit
+            // set pc_src=1 --> verificar que se incrementa desde el valor random
+            input_pc_source = 1'b0;
+            $display("setting pc_src = 0");
 
-        // send_data_to_rx(alu_OPCODE);
+            repeat(10) begin
+                @(posedge clock);
 
-        // espera que termine de transmitir el resultado
-        // @(posedge tx_done);
+                `assert(out_pc_next == last_pc+1);
+                last_pc = out_pc_next;
+            end
+        end
 
         #10
 
-        // if(tx_buffer != alu_data) begin
-        //     $error("error!");
-        //     $display("############# FAILED Test ############");
-        //     $finish();
-        // end
-        // else begin
-        //     $display("############# SUCCESS Test ############");
-        //     $finish();
-        // end
         $display("############# Test [PASSED] ############");
         $finish();
     end
