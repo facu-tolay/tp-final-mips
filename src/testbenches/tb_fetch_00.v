@@ -1,38 +1,47 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 11/24/2020 04:26:09 PM
-// Design Name: 
-// Module Name: tb_interface
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-module tb_interface();
+// Verifica que a cada ciclo con valid incremente el PC en 1
 
-    wire        tx_data;
-    reg [7:0]   alu_A;
-    reg [7:0]   alu_B;
-    reg [5:0]   alu_OPCODE;
-    reg [5:0]   array_OPCODE [0:7];
+//`define assert(signal, value) \
+    //if (signal !== value) begin \
+`define assert(value) \
+    if (!value) begin \
+        $display("ASSERTION EXPECTED TO BE TRUE"); \
+        $display("############# Test [FAILED] ############"); \
+        $finish; \
+    end \
+
+module tb_fetch_00();
+
+    localparam NB_DATA       = 32;
+    localparam NB_REGISTER   = 5;
+
+    // wire        tx_data;
+    // reg [7:0]   alu_A;
+    // reg [7:0]   alu_B;
+    // reg [5:0]   alu_OPCODE;
+    // reg [5:0]   array_OPCODE [0:7];
+
+    wire [NB_DATA        -1 :0] out_pc_next    ;
+    reg  [NB_DATA        -1 :0] last_pc        ;
+    wire [NB_DATA        -1 :0] out_instruction;
+    wire [NB_REGISTER    -1 :0] out_rt         ;
+    wire [NB_REGISTER    -1 :0] out_rs         ;
+    reg [NB_DATA        -1 :0] input_pc_next  ;
+    reg input_stall;
+    reg input_pc_source;
+
+    // --------------------------------------------------
+    // Valid block
+    // --------------------------------------------------
+    reg valid;
 
     // --------------------------------------------------
     // Clock block
     // --------------------------------------------------
     reg clock;
     always #1 clock = ~clock;
-    
+
     // --------------------------------------------------
     // Reset block
     // --------------------------------------------------
@@ -46,7 +55,7 @@ module tb_interface();
             reset = 1'b0;
         end
     endtask
-    
+
     // --------------------------------------------------
     // Data Send UART block
     // --------------------------------------------------
@@ -75,67 +84,85 @@ module tb_interface();
             send_one_bit_uart(1'b1); // stop bit
         end
     endtask
-   
+
     // --------------------------------------------------
     // DUT Instantiation
     // --------------------------------------------------
-    top
+    fetch_stage
     #(
     )
-    u_top
+    u_fetch_stage
     (
-        .i_rx                   (rx_data    ),
-        .i_clock                (clock      ),
-        .i_reset                (reset      ),
-        .o_data                 (data_out   ),
-        .o_tx                   (tx_data    ),
-        .o_tx_done_tick         (tx_done    ),
-        .o_rx_done_tick         (rx_done    )
+        .o_pc_next          (out_pc_next        ),
+        .o_instruction      (out_instruction    ),
+        .o_rs               (out_rs             ),
+        .o_rt               (out_rt             ),
+
+        .i_pc_next          (input_pc_next      ),
+        .i_stall            (input_stall        ),
+        .i_pc_src           (input_pc_source    ),
+        .i_valid            (valid              ),
+        .i_clock            (clock              ),
+        .i_reset            (reset              )
     );
 
     initial begin
 
         //Definicion OPCODE
-        array_OPCODE[0] = 6'b100000;    //ADD
-        array_OPCODE[1] = 6'b100010;    //SUB
-        array_OPCODE[2] = 6'b100100;    //AND
-        array_OPCODE[3] = 6'b100101;    //OR
-        array_OPCODE[4] = 6'b100110;    //XOR
-        array_OPCODE[5] = 6'b000011;    //SRA
-        array_OPCODE[6] = 6'b000010;    //SRL
-        array_OPCODE[7] = 6'b100111;    //NOR
+        // array_OPCODE[0] = 6'b100000;    //ADD
+        // array_OPCODE[1] = 6'b100010;    //SUB
+        // array_OPCODE[2] = 6'b100100;    //AND
+        // array_OPCODE[3] = 6'b100101;    //OR
+        // array_OPCODE[4] = 6'b100110;    //XOR
+        // array_OPCODE[5] = 6'b000011;    //SRA
+        // array_OPCODE[6] = 6'b000010;    //SRL
+        // array_OPCODE[7] = 6'b100111;    //NOR
 
         i = 0;
 
+        valid           = 1'b0;
+        input_stall     = 1'b0;
+        input_pc_source = 1'b0;
+        last_pc         = 32'b0;
+
         //Generacion de numeros random
-        alu_A = $random();
-        alu_B = $urandom();
-        alu_OPCODE = array_OPCODE[$urandom()%8];
+        // alu_A = $random();
+        // alu_B = $urandom();
+        // alu_OPCODE = array_OPCODE[$urandom()%8];
 
         //Comienzo de test
-        $display("############# Test START ############");
+        $display("############# Test START ############\n");
         reset = 1'b0;
         clock = 1'b0;
-        rx_data = 1'b1; // idle state for RX is 1'b1
 
         reset_dut();
+        valid = 1'b1;
 
-        send_one_bit_uart(1'b1);
+        repeat(10) begin
+            @(posedge clock);
 
-        send_data_to_rx(alu_A);
+            $display("checking assertion | PC = <%h> | last = <%h>", out_pc_next, last_pc);
+            `assert(out_pc_next == last_pc+1);
 
-        send_one_bit_uart(1'b1); // stop bit
+            last_pc = out_pc_next;
+        end
 
-        send_data_to_rx(alu_B);
+        // send_one_bit_uart(1'b1);
 
-        send_one_bit_uart(1'b1); // stop bit
+        // send_data_to_rx(alu_A);
 
-        send_data_to_rx(alu_OPCODE);
+        // send_one_bit_uart(1'b1); // stop bit
+
+        // send_data_to_rx(alu_B);
+
+        // send_one_bit_uart(1'b1); // stop bit
+
+        // send_data_to_rx(alu_OPCODE);
 
         // espera que termine de transmitir el resultado
-        @(posedge tx_done);
+        // @(posedge tx_done);
 
-        #10000
+        #10
 
         // if(tx_buffer != alu_data) begin
         //     $error("error!");
@@ -146,7 +173,7 @@ module tb_interface();
         //     $display("############# SUCCESS Test ############");
         //     $finish();
         // end
-        $display("############# END Test ############");
+        $display("############# Test [PASSED] ############");
         $finish();
     end
 endmodule

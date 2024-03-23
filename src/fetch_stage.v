@@ -9,10 +9,8 @@ module fetch_stage
     output reg [NB_DATA     -1 : 0] o_instruction   ,
     output reg [NB_REGISTER -1 : 0] o_rs            ,
     output reg [NB_REGISTER -1 : 0] o_rt            ,
-    output reg                      o_halt          ,
 
-    input wire [NB_DATA     -1 : 0] i_pc_salto      ,
-    input wire                      i_halt          ,
+    input wire [NB_DATA     -1 : 0] i_pc_next       ,
     input wire                      i_stall         ,
     input wire                      i_pc_src        ,
     input wire                      i_valid         ,
@@ -43,9 +41,9 @@ module fetch_stage
         end
         else if(i_valid) begin // decide el valor del PC
             if(i_pc_src) begin
-                pc <= i_pc_salto;
+                pc <= i_pc_next;
             end
-            else if(~i_halt && ~i_stall) begin
+            else if(~i_stall) begin
                 pc <= pc + 1;
             end
             else begin
@@ -87,15 +85,6 @@ module fetch_stage
         end
         else if(i_valid && ~i_stall) begin
             o_rt <= instruction[20:16];
-        end
-    end
-
-    always @(negedge i_clock) begin
-        if(i_reset) begin
-            o_halt <= 1'b1;
-        end
-        else if(i_valid && ~i_stall) begin
-            o_halt <= i_halt;
         end
     end
 
