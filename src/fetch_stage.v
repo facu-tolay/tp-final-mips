@@ -21,6 +21,9 @@ module fetch_stage
     reg  [NB_DATA -1 : 0] pc;
     wire [NB_DATA -1 : 0] instruction;
 
+    // --------------------------------------------------
+    // RAM memory
+    // --------------------------------------------------
     ram_memory
     #(
         .RAM_WIDTH       (32            ),
@@ -35,6 +38,9 @@ module fetch_stage
         .i_valid        (i_valid        )
     );
 
+    // --------------------------------------------------
+    // PC update block
+    // --------------------------------------------------
     always @(posedge i_clock) begin: pc_update
         if(i_reset) begin
             pc <= {NB_DATA {1'b0}};
@@ -52,6 +58,9 @@ module fetch_stage
         end
     end
 
+    // --------------------------------------------------
+    // Output PC next
+    // --------------------------------------------------
     always @(negedge i_clock) begin
         if(i_reset) begin
             o_pc_next <= {NB_DATA {1'b0}};
@@ -61,6 +70,9 @@ module fetch_stage
         end
     end
 
+    // --------------------------------------------------
+    // Output instruction read
+    // --------------------------------------------------
     always @(negedge i_clock) begin
         if(i_reset) begin
             o_instruction <= {NB_DATA {1'b0}};
@@ -70,6 +82,9 @@ module fetch_stage
         end
     end
 
+    // --------------------------------------------------
+    // Output RS
+    // --------------------------------------------------
     always @(negedge i_clock) begin
         if(i_reset) begin
             o_rs <= {NB_REGISTER {1'b0}};
@@ -79,6 +94,9 @@ module fetch_stage
         end
     end
 
+    // --------------------------------------------------
+    // Output RT
+    // --------------------------------------------------
     always @(negedge i_clock) begin
         if(i_reset) begin
             o_rt <= {NB_REGISTER {1'b0}};
