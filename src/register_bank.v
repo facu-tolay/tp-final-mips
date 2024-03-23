@@ -19,14 +19,17 @@ module register_bank
     input wire                      i_clock
 );
 
-    reg [NB_DATA -1 : 0] registers[N_REGISTERS -1 : 0];
+    reg [NB_DATA -1 : 0] registers[0 : N_REGISTERS-1];
+    integer              i                           ;
 
     // --------------------------------------------------
     // Write block
     // --------------------------------------------------
     always @(negedge i_clock) begin : write_reg
         if(i_reset) begin
-            registers <= {N_REGISTERS {NB_DATA{1'b0}}};
+            for(i=0; i<N_REGISTERS; i=i+1) begin
+                registers[i] <= {NB_DATA{1'b0}};
+            end
         end
         if(i_valid) begin
             if(i_write_reg_enable && i_write_reg_sel != 5'b0) begin

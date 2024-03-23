@@ -41,7 +41,7 @@ module decode_stage
     reg [NB_DATA        -13 : 0] instruction_index;
 
     // --------------------------------------------------
-    // PC + 1 delay
+    // Next PC delay
     // --------------------------------------------------
     always @(posedge i_clock) begin: reg_pc_next
         if(i_reset) begin
@@ -109,21 +109,24 @@ module decode_stage
         end
     end
 
-    always @(negedge i_clock) begin : data_reg_write
-        if(i_reset) begin
-            data_reg_write <= 32'b0;
-        end
-        if(i_valid) begin
-            data_reg_write <= i_data_reg_write;
-        end
-    end
-
     always @(negedge i_clock) begin : reg_instr_index
         if(i_reset) begin
             instruction_index <= 20'b0;
         end
         if(i_valid) begin
             instruction_index <= instruction[25:0];
+        end
+    end
+
+    // --------------------------------------------------
+    // Register data write
+    // --------------------------------------------------
+    always @(negedge i_clock) begin : data_reg_write
+        if(i_reset) begin
+            data_reg_write <= 32'b0;
+        end
+        if(i_valid) begin
+            data_reg_write <= i_data_reg_write;
         end
     end
 
