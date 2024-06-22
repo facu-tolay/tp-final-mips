@@ -3,75 +3,56 @@
 
 module top
 #(
-    parameter   NB_DATA   = 6
+    parameter   NB_DATA     = 6     ,
+    parameter   NB_DISPLAY  = 7
 )
 (
-    output wire                     o_uart_tx_data  ,
-    output wire [NB_DATA - 1 : 0]   o_data          ,
+    output wire                             o_uart_tx_data  ,
+    output wire [NB_DATA        - 1 : 0]    o_data          ,
+    output wire [NB_DISPLAY     - 1 : 0]    o_display       ,
+    output wire                             o_display_enable,
 
-    input wire                      i_uart_rx_data  ,
-    input wire                      i_switch        ,
-    input wire                      i_reset         ,
-    input wire                      i_clock
-
+    input wire                              i_uart_rx_data  ,
+    input wire                              i_switch        ,
+    input wire                              i_reset         ,
+    input wire                              i_clock
 );
 
-    switch_debounce
-    #(
-    )
-    u_switch_debounce
+    // --------------------------------------------------
+    // Debug Unit
+    // --------------------------------------------------
+    debug_unit u_debug_unit
     (
-        .o_signal           (o_data[5] ),
+        .o_uart_tx_data     (o_uart_tx_data         ),
+        .o_execution_mode   (o_data[5]              ), // si es continuo o paso a paso
+        .o_execution_step   (o_data[4]              ), // ejecutar un paso
+        .o_du_done          (o_data[3]              ), // indica cuando termino el proceso de enviar
+        .o_state            (o_data[2:0]            ),
 
-        .i_switch           (i_switch  ),
-        .i_clock            (i_clock   ),
-        .i_reset            (i_reset   )
-    );
-
-    // --------------------------------------------------
-    // Fetch stage
-    // --------------------------------------------------
-    // fetch_stage
-    // #(
-    // )
-    // u_fetch_stage
-    // (
-    //     .o_pc_next          (           ),
-    //     .o_instruction      (           ),
-    //     .o_rs               (o_data[4:0]),
-    //     .o_rt               (           ),
-
-    //     .i_pc_next          (           ),
-    //     .i_stall            (1'b0       ),
-    //     .i_pc_src           (1'b0       ),
-    //     .i_valid            (1'b1       ),
-    //     .i_clock            (i_clock    ),
-    //     .i_reset            (i_reset    )
-    // );
-
-    // --------------------------------------------------
-    // UART
-    // --------------------------------------------------
-    wire tx_done_uart;
-    wire rx_done_uart;
-    wire [8-1 : 0] data_uart_receive;
-    uart u_uart
-    (
-        .o_tx                       (o_uart_tx_data         ),
-        .o_data                     (data_uart_receive      ),
-        .o_tx_done_pulse            (tx_done_uart           ),
-        .o_rx_done_pulse            (rx_done_uart           ),
-
-        .i_rx                       (i_uart_rx_data         ),
-        .i_tx_data                  (8'b00                  ),
-        .i_tx_start                 (1'b0                   ),
-        .i_reset                    (i_reset                ),
-        .i_clock                    (i_clock                )
+        .i_uart_rx_data     (i_uart_rx_data         ),
+        .i_halt             (1'b0                   ),
+        .i_pc               (32'b0                  ),
+        .i_data_memory      (32'b0                  ),
+        .i_cycles           (32'b0                  ),
+        .i_registers        (1024'b0                ),
+        .i_reset            (i_reset                ),
+        .i_clock            (i_clock                )
     );
 
     // --------------------------------------------------
     // Output block
     // --------------------------------------------------
-    // assign o_data           = data_result           ;
+    // reg display_enable;
+    // always @(posedge i_clock) begin
+    //     if(i_reset) begin
+    //          display_enable <= 1'b0;
+    //     end
+    //     else begin
+    //          display_enable <= 1'b0;
+    //     end
+    // end
+
+    assign o_display_enable = 1'b1;
+    assign o_display        = 7'h7F;
 
 endmodule
