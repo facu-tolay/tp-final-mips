@@ -35,6 +35,7 @@ module debug_unit_receive
     reg                         enable_write_memory;
     reg                         execution_step;
     reg                         execution_mode;
+    reg                         execution_mode_d;
 
 
     // --------------------------------------------------
@@ -46,6 +47,15 @@ module debug_unit_receive
         end
         else begin
             rx_done <= i_rx_done;
+        end
+    end
+
+    always @(posedge i_clock) begin : execution_mode_block
+        if(i_reset) begin
+            execution_mode_d <= 1'b0;
+        end
+        else if(~execution_mode_d) begin
+            execution_mode_d <= execution_mode;
         end
     end
 
@@ -130,7 +140,7 @@ module debug_unit_receive
                 step                = 1'b0;
 
                 if(rx_done && i_rx_data != HALT_INSTRUCTION[N_BITS-1 : 0]) begin // verificar que no sea el halt del estado anterior
-                    execution_mode = i_rx_data[0]; // FIXME cambiar esto
+                    execution_mode = i_rx_data[0];
                     next_state = STEP;
                 end
                 else begin
@@ -144,7 +154,7 @@ module debug_unit_receive
                 execution_mode      = 1'b0;
                 next_state          = STEP;
 
-                if(rx_done) begin // en caso que sea un paso a paso (1), se genera un step automaticamente por cada entrada i_rx_data
+                if(rx_done) begin // se genera un step por cada byte recibido
                     step = i_rx_data;
                 end
                 else begin
@@ -167,7 +177,7 @@ module debug_unit_receive
 
     assign o_state                  = state;
     assign o_execution_step         = execution_step;
-    assign o_execution_mode         = execution_mode;
+    assign o_execution_mode         = execution_mode || execution_mode_d;
     assign o_enable_write_memory    = enable_write_memory;
     assign o_done_write_memory      = done_write_memory;
     assign o_data_memory            = done_write_memory ? data_memory : {N_BITS_INSTR {1'b0}};
