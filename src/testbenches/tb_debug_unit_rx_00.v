@@ -108,14 +108,16 @@ module tb_debug_unit_rx_00();
         `assert(enable_write_memory == 1'b0);
         `assert(execution_mode      == 1'b1);
 
-        // espera N clocks y despues va mandando pulsos de step
-        @(posedge clock);
+        // verifica los pulsos de step
         @(posedge clock);
         @(posedge clock);
         send_uart_data_to_du(8'h01);
+        `assert(execution_step      == 1'b1);
+
+        @(posedge clock);
         @(posedge clock);
         send_uart_data_to_du(8'h01);
-        @(posedge clock);
+        `assert(execution_step      == 1'b1);
 
         #10
 
