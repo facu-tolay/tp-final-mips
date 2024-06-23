@@ -155,7 +155,7 @@ module debug_unit_receive
                 next_state          = STEP;
 
                 if(rx_done) begin // se genera un step por cada byte recibido
-                    step = i_rx_data;
+                    step = i_rx_data[0];
                 end
                 else begin
                     step = 1'b0;

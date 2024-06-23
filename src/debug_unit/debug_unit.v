@@ -42,20 +42,6 @@ module debug_unit
     // --------------------------------------------------
     // UART
     // --------------------------------------------------
-    // uart u_uart
-    // (
-    //     .o_tx                           (o_uart_tx_data     ),
-    //     .o_data                         (uart_data_receive  ),
-    //     .o_tx_done_pulse                (uart_tx_done       ),
-    //     .o_rx_done_pulse                (uart_rx_done       ),
-
-    //     .i_rx                           (i_uart_rx_data     ),
-    //     .i_tx_data                      (data_uart_send     ),
-    //     .i_tx_start                     (uart_tx_start      ),
-    //     .i_reset                        (i_reset            ),
-    //     .i_clock                        (i_clock            )
-    // );
-
     uart_32b u_uart
     (
         .o_data                         (uart_data_receive  ),
@@ -77,22 +63,6 @@ module debug_unit
     // --------------------------------------------------
     debug_unit_transmit du_transmit
     (
-        // .o_uart_data_to_send            (data_uart_send     ),
-        // .o_uart_tx_start                (uart_tx_start      ),
-        // .o_done                         (du_done            ),
-        // .o_state                        (                   ),
-
-        // .i_execution_mode               (execution_mode     ),
-        // .i_step                         (execution_step     ),
-        // .i_halt                         (i_halt             ),
-        // .i_pc                           (i_pc               ),
-        // .i_data_memory                  (i_data_memory      ),
-        // .i_cycles                       (i_cycles           ),
-        // .i_registers                    (i_registers        ),
-        // .i_uart_tx_done                 (uart_tx_done       ),
-        // .i_reset                        (i_reset            ),
-        // .i_clock                        (i_clock            )
-
         .o_uart_data_to_send            (uart_data_send_32b ),
         .o_uart_tx_8b_start             (uart_tx_start_8b   ),
         .o_uart_tx_32b_start            (uart_tx_start_32b  ),
@@ -102,7 +72,7 @@ module debug_unit
         .i_registers                    (i_registers        ),
         .i_data_memory                  (i_data_memory      ),
         .i_cycles                       (i_cycles           ),
-        .i_uart_tx_done                 (                   ),
+        .i_uart_tx_done                 (                   ), // FIXME borrar
         .i_uart_tx_8b_done              (uart_tx_done_8b    ),
         .i_uart_tx_32b_done             (uart_tx_done_32b   ),
         .i_execution_mode               (execution_mode     ),
