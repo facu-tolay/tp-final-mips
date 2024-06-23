@@ -23,12 +23,18 @@ module debug_unit
     input wire                                  i_clock
 );
 
-    wire [NB_BYTE       -1 : 0] data_uart_receive;
+    wire [NB_BYTE       -1 : 0] uart_data_receive;
     wire [NB_BYTE       -1 : 0] data_uart_send;
+    wire [NB_DATA       -1 : 0] uart_data_send_32b;
     wire [NB_STATE      -1 : 0] state;
     wire                        uart_rx_done;
     wire                        uart_tx_done;
+    wire                        uart_tx_done_8b;
+    wire                        uart_tx_done_32b;
     wire                        uart_tx_start;
+    wire                        uart_tx_start_8b;
+    wire                        uart_tx_start_32b;
+    wire                        du_done;
     wire                        execution_mode;
     wire                        execution_step;
     wire                        halt;
@@ -36,16 +42,32 @@ module debug_unit
     // --------------------------------------------------
     // UART
     // --------------------------------------------------
-    uart u_uart
+    // uart u_uart
+    // (
+    //     .o_tx                           (o_uart_tx_data     ),
+    //     .o_data                         (uart_data_receive  ),
+    //     .o_tx_done_pulse                (uart_tx_done       ),
+    //     .o_rx_done_pulse                (uart_rx_done       ),
+
+    //     .i_rx                           (i_uart_rx_data     ),
+    //     .i_tx_data                      (data_uart_send     ),
+    //     .i_tx_start                     (uart_tx_start      ),
+    //     .i_reset                        (i_reset            ),
+    //     .i_clock                        (i_clock            )
+    // );
+
+    uart_32b u_uart
     (
-        .o_tx                           (o_uart_tx_data     ),
-        .o_data                         (data_uart_receive  ),
-        .o_tx_done_pulse                (uart_tx_done       ),
+        .o_data                         (uart_data_receive  ),
         .o_rx_done_pulse                (uart_rx_done       ),
+        .o_tx                           (o_uart_tx_data     ),
+        .o_tx_done_8b_pulse             (uart_tx_done_8b    ),
+        .o_tx_done_32b_pulse            (uart_tx_done_32b   ),
 
         .i_rx                           (i_uart_rx_data     ),
-        .i_tx_data                      (data_uart_send     ),
-        .i_tx_start                     (uart_tx_start      ),
+        .i_tx_data                      (uart_data_send_32b ),
+        .i_tx_start_8b                  (uart_tx_start_8b   ),
+        .i_tx_start_32b                 (uart_tx_start_32b  ),
         .i_reset                        (i_reset            ),
         .i_clock                        (i_clock            )
     );
@@ -55,19 +77,37 @@ module debug_unit
     // --------------------------------------------------
     debug_unit_transmit du_transmit
     (
-        .o_uart_data_to_send            (data_uart_send     ),
-        .o_uart_tx_start                (uart_tx_start      ),
-        .o_done                         (done               ),
-        .o_state                        (                   ),
+        // .o_uart_data_to_send            (data_uart_send     ),
+        // .o_uart_tx_start                (uart_tx_start      ),
+        // .o_done                         (du_done            ),
+        // .o_state                        (                   ),
 
+        // .i_execution_mode               (execution_mode     ),
+        // .i_step                         (execution_step     ),
+        // .i_halt                         (i_halt             ),
+        // .i_pc                           (i_pc               ),
+        // .i_data_memory                  (i_data_memory      ),
+        // .i_cycles                       (i_cycles           ),
+        // .i_registers                    (i_registers        ),
+        // .i_uart_tx_done                 (uart_tx_done       ),
+        // .i_reset                        (i_reset            ),
+        // .i_clock                        (i_clock            )
+
+        .o_uart_data_to_send            (uart_data_send_32b ),
+        .o_uart_tx_8b_start             (uart_tx_start_8b   ),
+        .o_uart_tx_32b_start            (uart_tx_start_32b  ),
+        .o_done                         (du_done            ),
+
+        .i_pc                           (i_pc               ),
+        .i_registers                    (i_registers        ),
+        .i_data_memory                  (i_data_memory      ),
+        .i_cycles                       (i_cycles           ),
+        .i_uart_tx_done                 (                   ),
+        .i_uart_tx_8b_done              (uart_tx_done_8b    ),
+        .i_uart_tx_32b_done             (uart_tx_done_32b   ),
         .i_execution_mode               (execution_mode     ),
         .i_step                         (execution_step     ),
         .i_halt                         (i_halt             ),
-        .i_pc                           (i_pc               ),
-        .i_data_memory                  (i_data_memory      ),
-        .i_cycles                       (i_cycles           ),
-        .i_registers                    (i_registers        ),
-        .i_uart_tx_done                 (uart_tx_done       ),
         .i_reset                        (i_reset            ),
         .i_clock                        (i_clock            )
     );
@@ -81,7 +121,7 @@ module debug_unit
         .o_execution_step               (execution_step     ),
         .o_state                        (state              ),
 
-        .i_rx_data                      (data_uart_receive  ),
+        .i_rx_data                      (uart_data_receive  ),
         .i_rx_done                      (uart_rx_done       ),
         .i_reset                        (i_reset            ),
         .i_clock                        (i_clock            )
@@ -92,10 +132,7 @@ module debug_unit
     // --------------------------------------------------
     assign o_execution_mode = execution_mode;
     assign o_execution_step = execution_step;
-    assign o_du_done        = done;
+    assign o_du_done        = du_done;
     assign o_state          = state;
-    // assign o_state[0]       = data_uart_receive[0];
-    // assign o_state[1]       = data_uart_receive[1];
-    // assign o_state[2]       = uart_rx_done;
 
 endmodule
