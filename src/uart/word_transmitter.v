@@ -72,7 +72,8 @@ module word_transmitter
     // --------------------------------------------------
     // Enable transmit block
     // --------------------------------------------------
-    assign start_transmit = i_tx_8b_start || i_tx_32b_start;
+    assign start_transmit = i_tx_8b_start || i_tx_32b_start; // FIXME ver si agregar (&& ~enable_transmit) para evitar que empiece otra transmision sin terminar una.
+                                                             // lo mismo arrina en n_bytes_to_send
 
     always @(posedge i_clock) begin : enable_tx_block
         if (i_reset || (enable_transmit && state == IDLE)) begin

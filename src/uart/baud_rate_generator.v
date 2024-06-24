@@ -16,7 +16,7 @@ module baud_rate_generator
     localparam NUM_TICKS        = 16;
     localparam CLOCK_RATE_TICK  = CLOCK_RATE / (BAUD_RATE * NUM_TICKS);
 
-    reg     [DATA_BITS - 1 : 0] counter = 0;
+    reg     [DATA_BITS - 1 : 0] counter;
     wire    [DATA_BITS - 1 : 0] next_count;
 
     // --------------------------------------------------
@@ -26,7 +26,7 @@ module baud_rate_generator
 
     always@(posedge i_clock) begin
         if(i_reset) begin
-            counter = 0;
+            counter <= {DATA_BITS{1'b0}};
         end
         else begin
             counter <= next_count;
