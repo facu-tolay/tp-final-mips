@@ -20,6 +20,7 @@ module debug_unit_receive
 );
 
     localparam [N_BITS_INSTR    -1 : 0] HALT_INSTRUCTION    = {N_BITS_INSTR {1'b1}};
+    localparam [N_BITS          -1 : 0] START_LOAD_PROGRAM  = 8'h55;
     localparam [NB_STATE        -1 : 0] IDLE                = 3'b000;
     localparam [NB_STATE        -1 : 0] INSTRUCTIONS        = 3'b001;
     localparam [NB_STATE        -1 : 0] EXEC_MODE           = 3'b010;
@@ -112,7 +113,7 @@ module debug_unit_receive
                 execution_mode  = 1'b0;
                 step            = 1'b0;
 
-                if(rx_done && i_rx_data == 8'h55) begin
+                if(rx_done && i_rx_data == START_LOAD_PROGRAM) begin
                     enable_write_memory = 1'b1;
                     next_state = INSTRUCTIONS;
                 end
