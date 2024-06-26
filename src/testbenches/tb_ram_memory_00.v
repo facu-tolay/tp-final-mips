@@ -42,9 +42,9 @@ module tb_ram_memory_00();
 
     ram_memory u_ram_memory
     (
-        .o_data                 (memory_data_out    ),
+        .o_read_data            (memory_data_out    ),
 
-        .i_address              (memory_adrress     ),
+        .i_read_address         (memory_adrress     ),
         .i_write_data           (memory_data_in     ),
         .i_write_enable         (write_enable       ),
         .i_write_data_next      (write_data_next    ),

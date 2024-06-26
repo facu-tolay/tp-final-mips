@@ -5,37 +5,49 @@ module fetch_stage
     parameter NB_REGISTER   = 5
 )
 (
-    output reg [NB_DATA     -1 : 0] o_pc_next       ,
-    output reg [NB_DATA     -1 : 0] o_instruction   ,
-    output reg [NB_REGISTER -1 : 0] o_rs            ,
-    output reg [NB_REGISTER -1 : 0] o_rt            ,
+    output reg [NB_DATA     -1 : 0] o_pc_next           , // FIXME cambiar todo esto a wires
+    output reg [NB_DATA     -1 : 0] o_instruction       ,
+    output reg [NB_REGISTER -1 : 0] o_rs                ,
+    output reg [NB_REGISTER -1 : 0] o_rt                ,
+    output reg                      o_halt              ,
 
-    input wire [NB_DATA     -1 : 0] i_pc_next       ,
-    input wire                      i_stall         ,
-    input wire                      i_pc_src        ,
-    input wire                      i_valid         ,
-    input wire                      i_reset         ,
+    input wire [NB_DATA     -1 : 0] i_pc_next           ,
+    input wire                      i_pc_src            ,
+    input wire                      i_stall             ,
+    input wire                      i_halt              ,
+    input wire                      i_execution_mode    ,
+    input wire                      i_step              ,
+    input wire                      i_valid             ,
+    input wire                      i_reset             ,
     input wire                      i_clock
 );
 
-    reg  [NB_DATA -1 : 0] pc;
-    wire [NB_DATA -1 : 0] instruction;
+    reg  [NB_DATA -1 : 0]   pc;
+    wire [NB_DATA -1 : 0]   instruction;
+    wire                    fetch_new_instruction;
+    reg                     valid_d;
+
+    assign fetch_new_instruction = ~i_execution_mode || (i_execution_mode && i_step);
 
     // --------------------------------------------------
-    // RAM memory
+    // Program memory
     // --------------------------------------------------
     ram_memory
     #(
-        .RAM_WIDTH       (32            ),
-        .RAM_DEPTH       (2048          )
+        .RAM_WIDTH          (32             ),
+        .RAM_DEPTH          (256            ),
+        .NB_ADDRESS         (8              )
     )
     u_program_memory
     (
-        .o_instruction  (instruction    ),
-        .i_address      (pc             ),
-        .i_clock        (i_clock        ),
-        .i_reset        (i_reset        ),
-        .i_valid        (i_valid        )
+        .o_read_data        (instruction    ),
+
+        .i_read_address     (pc             ),
+        .i_write_data       (               ),
+        .i_write_enable     (1'b0           ),
+        .i_write_data_next  (1'b0           ),
+        .i_clock            (i_clock        ),
+        .i_reset            (i_reset        )
     );
 
     // --------------------------------------------------
@@ -45,16 +57,31 @@ module fetch_stage
         if(i_reset) begin
             pc <= {NB_DATA {1'b0}};
         end
-        else if(i_valid) begin // decide el valor del PC
-            if(i_pc_src) begin
-                pc <= i_pc_next;
+        // else if(i_valid) begin
+        else if(valid_d) begin
+            if(fetch_new_instruction) begin
+                if(i_pc_src) begin // FIXME mejorar usando un switch
+                    pc <= i_pc_next;
+                end
+                else if(~i_halt && ~i_stall) begin
+                    pc <= pc + 32'h1;
+                end
+                else begin
+                    pc <= pc;
+                end
             end
-            else if(~i_stall) begin
-                pc <= pc + 1;
-            end
-            else begin
-                pc <= pc;
-            end
+        end
+    end
+
+    // --------------------------------------------------
+    // Valid delay
+    // --------------------------------------------------
+    always @(negedge i_clock) begin
+        if(i_reset) begin
+            valid_d <= 1'b0;
+        end
+        else begin
+            valid_d <= i_valid;
         end
     end
 
@@ -65,8 +92,10 @@ module fetch_stage
         if(i_reset) begin
             o_pc_next <= {NB_DATA {1'b0}};
         end
-        else if(i_valid && ~i_stall) begin
-            o_pc_next <= pc;
+        else if(i_valid) begin
+            if(~i_stall && fetch_new_instruction) begin
+                o_pc_next <= pc;
+            end
         end
     end
 
@@ -77,8 +106,10 @@ module fetch_stage
         if(i_reset) begin
             o_instruction <= {NB_DATA {1'b0}};
         end
-        else if(i_valid && ~i_stall) begin
-            o_instruction <= instruction;
+        else if(i_valid) begin
+            if(~i_stall && fetch_new_instruction) begin
+                o_instruction <= instruction;
+            end
         end
     end
 
@@ -89,8 +120,10 @@ module fetch_stage
         if(i_reset) begin
             o_rs <= {NB_REGISTER {1'b0}};
         end
-        else if(i_valid && ~i_stall) begin
-            o_rs <= instruction[25:21];
+        else if(i_valid) begin
+            if(~i_stall && fetch_new_instruction) begin
+                o_rs <= instruction[25:21];
+            end
         end
     end
 
@@ -101,8 +134,24 @@ module fetch_stage
         if(i_reset) begin
             o_rt <= {NB_REGISTER {1'b0}};
         end
-        else if(i_valid && ~i_stall) begin
-            o_rt <= instruction[20:16];
+        else if(i_valid) begin
+            if(~i_stall && fetch_new_instruction) begin
+                o_rt <= instruction[20:16];
+            end
+        end
+    end
+
+    // --------------------------------------------------
+    // Output halt
+    // --------------------------------------------------
+    always @(negedge i_clock) begin
+        if(i_reset) begin
+            o_halt <= {NB_REGISTER {1'b0}};
+        end
+        else if(i_valid) begin
+            if(~i_stall && fetch_new_instruction) begin
+                o_halt <= i_halt;
+            end
         end
     end
 

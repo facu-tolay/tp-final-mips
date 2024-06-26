@@ -7,9 +7,9 @@ module ram_memory
     parameter NB_ADDRESS    = 8             // Address bus length (depends on RAM_DEPTH)
 )
 (
-    output wire [NB_DATA        -1 : 0] o_data              ,
+    output wire [NB_DATA        -1 : 0] o_read_data         ,
 
-    input  wire [NB_ADDRESS     -1 : 0] i_address           ,
+    input  wire [NB_ADDRESS     -1 : 0] i_read_address      ,
     input  wire [NB_DATA        -1 : 0] i_write_data        ,
     input  wire                         i_write_enable      , // cada vez que hay un flanco positivo, se comienza a escribir desde la posicion 0
     input  wire                         i_write_data_next   , // esta entrada recibe un pulso cada vez que se tiene que escribir en la proxima direccion
@@ -45,9 +45,28 @@ module ram_memory
     // --------------------------------------------------
     // Memory block
     // --------------------------------------------------
+    // always @(posedge i_clock) begin : wr_data_block
+    //     if(i_reset) begin
+    //         memory[0] <= 32'h0;
+    //     end
+    //     else if (write_enable && i_write_data_next) begin
+    //         memory[write_address] <= i_write_data;
+    //     end
+    // end
     always @(posedge i_clock) begin : wr_data_block
         if(i_reset) begin
-            memory[0] <= 32'h0;
+            memory[0]  <= 32'hAABBCCDD;
+            memory[1]  <= 32'h11223344;
+            memory[2]  <= 32'h66778899;
+            memory[3]  <= 32'h11001100;
+            memory[4]  <= 32'h44445555;
+            memory[5]  <= 32'hF6F62828;
+            memory[6]  <= 32'hA1A2A3A4;
+            memory[7]  <= 32'hB1B2B3B4;
+            memory[8]  <= 32'hFF00FF00;
+            memory[9]  <= 32'h88448844;
+            memory[10] <= 32'h12341234;
+            memory[11] <= 32'h99999999;
         end
         else if (write_enable && i_write_data_next) begin
             memory[write_address] <= i_write_data;
@@ -58,6 +77,29 @@ module ram_memory
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_data = memory[i_address];
+    assign o_read_data = memory[i_read_address];
 
 endmodule
+
+// --------------------------------------------------
+// Memory block CON DATOS
+// --------------------------------------------------
+    // always @(posedge i_clock) begin : wr_data_block
+    //     if(i_reset) begin
+    //         memory[0]  <= 32'hAABBCCDD;
+    //         memory[1]  <= 32'h11223344;
+    //         memory[2]  <= 32'h66778899;
+    //         memory[3]  <= 32'h11001100;
+    //         memory[4]  <= 32'h44445555;
+    //         memory[5]  <= 32'hF6F62828;
+    //         memory[6]  <= 32'hA1A2A3A4;
+    //         memory[7]  <= 32'hB1B2B3B4;
+    //         memory[8]  <= 32'hFF00FF00;
+    //         memory[9]  <= 32'h88448844;
+    //         memory[10] <= 32'h12341234;
+    //         memory[11] <= 32'h99999999;
+    //     end
+    //     else if (write_enable && i_write_data_next) begin
+    //         memory[write_address] <= i_write_data;
+    //     end
+    // end

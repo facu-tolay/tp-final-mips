@@ -16,7 +16,6 @@ module decode_stage
     output wire [NB_DATA     -1 : 0] o_extended             ,
     output wire [NB_DATA     -7 : 0] o_instruction_index    ,
 
-    //INPUTS
     input wire [NB_DATA      -1 : 0] i_instruction          ,
     input wire [NB_DATA      -1 : 0] i_pc_next              ,
     input wire [NB_DATA      -1 : 0] i_data_reg_write       ,
@@ -121,7 +120,7 @@ module decode_stage
     // --------------------------------------------------
     // Register data write
     // --------------------------------------------------
-    always @(negedge i_clock) begin : data_reg_write
+    always @(negedge i_clock) begin : data_reg_write_block
         if(i_reset) begin
             data_reg_write <= 32'b0;
         end
