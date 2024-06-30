@@ -34,7 +34,7 @@ module fetch_stage
     // --------------------------------------------------
     ram_memory
     #(
-        .RAM_WIDTH          (32             ),
+        .NB_DATA            (32             ),
         .RAM_DEPTH          (256            ),
         .NB_ADDRESS         (8              )
     )

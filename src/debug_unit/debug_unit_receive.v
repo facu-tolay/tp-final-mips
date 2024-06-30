@@ -1,8 +1,7 @@
 module debug_unit_receive
 #(
-    parameter N_BITS            = 8     ,
-    parameter N_BITS_REG        = 5     ,
-    parameter N_BITS_INSTR      = 32    ,
+    parameter NB_BYTE           = 8     ,
+    parameter NB_DATA           = 32    ,
     parameter NB_STATE          = 3
 )
 (
@@ -10,26 +9,26 @@ module debug_unit_receive
     output wire                         o_execution_step        ,
     output wire                         o_enable_write_memory   ,
     output wire                         o_done_write_memory     ,
-    output wire [N_BITS_INSTR   -1 : 0] o_data_memory           ,
+    output wire [NB_DATA        -1 : 0] o_data_memory           ,
     output wire [NB_STATE       -1 : 0] o_state                 ,
 
-    input wire  [N_BITS         -1 : 0] i_rx_data               ,
+    input wire  [NB_BYTE        -1 : 0] i_rx_data               ,
     input wire                          i_rx_done               ,
     input wire                          i_reset                 ,
     input wire                          i_clock
 );
 
-    localparam [N_BITS_INSTR    -1 : 0] HALT_INSTRUCTION    = {N_BITS_INSTR {1'b1}};
-    localparam [N_BITS          -1 : 0] START_LOAD_PROGRAM  = 8'h55;
-    localparam [NB_STATE        -1 : 0] IDLE                = 3'b000;
-    localparam [NB_STATE        -1 : 0] INSTRUCTIONS        = 3'b001;
-    localparam [NB_STATE        -1 : 0] EXEC_MODE           = 3'b010;
-    localparam [NB_STATE        -1 : 0] STEP                = 3'b011;
+    localparam [NB_DATA     -1 : 0] HALT_INSTRUCTION            = {NB_DATA {1'b1}};
+    localparam [NB_BYTE     -1 : 0] START_LOAD_PROGRAM          = 8'h55;
+    localparam [NB_STATE    -1 : 0] IDLE_STATE                  = 3'b000;
+    localparam [NB_STATE    -1 : 0] LOAD_INSTRUCTIONS_STATE     = 3'b001;
+    localparam [NB_STATE    -1 : 0] SELECT_EXECUTION_MODE_STATE = 3'b010;
+    localparam [NB_STATE    -1 : 0] STEP_STATE                  = 3'b011;
 
-    reg [N_BITS_INSTR   -1 : 0] data_memory = 32'b0;
+    reg [NB_DATA        -1 : 0] data_memory = 32'b0;
     reg [NB_STATE       -1 : 0] state;
     reg [NB_STATE       -1 : 0] next_state;
-    reg [NB_STATE       -1 : 0] instr_byte_count;
+    reg [NB_STATE       -1 : 0] instruction_byte_count;
     reg                         rx_done;
     wire                        done_write_memory;
     reg                         step;
@@ -60,7 +59,7 @@ module debug_unit_receive
         end
     end
 
-    always @(negedge i_clock) begin : exec_step_block
+    always @(negedge i_clock) begin : execution_step_block
         if(i_reset | execution_step) begin
             execution_step <= 1'b0;
         end
@@ -72,26 +71,26 @@ module debug_unit_receive
     // --------------------------------------------------
     // 4 byte buffer for instructions
     // --------------------------------------------------
-    assign done_write_memory = instr_byte_count >= 4 && enable_write_memory;
+    assign done_write_memory = instruction_byte_count >= 4 && enable_write_memory;
 
-    always @(posedge i_clock) begin : instruction_receive
+    always @(posedge i_clock) begin : instruction_receive_block
         if(i_reset) begin
             data_memory <= 32'b0;
         end
         else if(enable_write_memory && i_rx_done) begin
-            data_memory <= {data_memory[N_BITS_INSTR - N_BITS -1 : 0], i_rx_data};
+            data_memory <= {data_memory[NB_DATA - NB_BYTE -1 : 0], i_rx_data};
         end
     end
 
-    always @(posedge i_clock) begin : instruction_byte_count
+    always @(posedge i_clock) begin : instruction_byte_count_block
         if(i_reset) begin
-            instr_byte_count <= 3'b0;
+            instruction_byte_count <= 3'b0;
         end
-        else if(instr_byte_count >= 4) begin
-            instr_byte_count <= i_rx_done ? 3'b1 : 3'b0; // esto indica que si van a seguir viniendo datos, que inicialice la cuenta en 1
+        else if(instruction_byte_count >= 4) begin
+            instruction_byte_count <= i_rx_done ? 3'b1 : 3'b0; // esto indica que si van a seguir viniendo datos, que inicialice la cuenta en 1
         end
         else if(enable_write_memory && i_rx_done) begin
-            instr_byte_count <= instr_byte_count + 3'b1;
+            instruction_byte_count <= instruction_byte_count + 3'b1;
         end
     end
 
@@ -100,7 +99,7 @@ module debug_unit_receive
     // --------------------------------------------------
     always @(posedge i_clock) begin : state_block
         if(i_reset) begin
-            state <= IDLE;
+            state <= IDLE_STATE;
         end
         else begin
             state <= next_state;
@@ -109,51 +108,51 @@ module debug_unit_receive
 
     always @(*) begin : rx_state_machine
         case(state)
-            IDLE: begin
+            IDLE_STATE: begin
                 execution_mode  = 1'b0;
                 step            = 1'b0;
 
                 if(rx_done && i_rx_data == START_LOAD_PROGRAM) begin
                     enable_write_memory = 1'b1;
-                    next_state = INSTRUCTIONS;
+                    next_state = LOAD_INSTRUCTIONS_STATE;
                 end
                 else begin
                     enable_write_memory = 1'b0;
-                    next_state = IDLE;
+                    next_state = IDLE_STATE;
                 end
             end
 
-            INSTRUCTIONS: begin
+            LOAD_INSTRUCTIONS_STATE: begin
                 enable_write_memory = 1'b1;
                 execution_mode      = 1'b0;
                 step                = 1'b0;
 
                 if(rx_done && data_memory == HALT_INSTRUCTION) begin
-                    next_state = EXEC_MODE;
+                    next_state = SELECT_EXECUTION_MODE_STATE;
                 end
                 else begin
-                    next_state = INSTRUCTIONS;
+                    next_state = LOAD_INSTRUCTIONS_STATE;
                 end
             end
 
-            EXEC_MODE: begin
+            SELECT_EXECUTION_MODE_STATE: begin
                 enable_write_memory = 1'b0;
                 step                = 1'b0;
 
-                if(rx_done && i_rx_data != HALT_INSTRUCTION[N_BITS-1 : 0]) begin // verificar que no sea el halt del estado anterior
+                if(rx_done && i_rx_data != HALT_INSTRUCTION[NB_BYTE-1 : 0]) begin // verificar que no sea el halt del estado anterior
                     execution_mode = i_rx_data[0];
-                    next_state = STEP;
+                    next_state = STEP_STATE;
                 end
                 else begin
                     execution_mode = 1'b0;
-                    next_state = EXEC_MODE;
+                    next_state = SELECT_EXECUTION_MODE_STATE;
                 end
             end
 
-            STEP: begin
+            STEP_STATE: begin
                 enable_write_memory = 1'b0;
                 execution_mode      = 1'b0;
-                next_state          = STEP;
+                next_state          = STEP_STATE;
 
                 if(rx_done) begin // se genera un step por cada byte recibido
                     step = i_rx_data[0];
@@ -167,7 +166,7 @@ module debug_unit_receive
                 enable_write_memory = 1'b0;
                 execution_mode      = 1'b0;
                 step                = 1'b0;
-                next_state          = IDLE;
+                next_state          = IDLE_STATE;
             end
        endcase
     end
@@ -181,6 +180,6 @@ module debug_unit_receive
     assign o_execution_mode         = execution_mode || execution_mode_d;
     assign o_enable_write_memory    = enable_write_memory;
     assign o_done_write_memory      = done_write_memory;
-    assign o_data_memory            = done_write_memory ? data_memory : {N_BITS_INSTR {1'b0}};
+    assign o_data_memory            = done_write_memory ? data_memory : {NB_DATA {1'b0}};
 
 endmodule

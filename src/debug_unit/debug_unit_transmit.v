@@ -1,29 +1,27 @@
 module debug_unit_transmit
 #
 (
-    parameter N_BITS_INSTR  = 32,
-    parameter N_BITS_UART   = 8,
-    parameter N_BITS_REG    = 5,
+    parameter NB_DATA       = 32    ,
     parameter NB_STATE      = 4
 )
 (
-    output wire [N_BITS_INSTR               -1 : 0]     o_uart_data_to_send ,
-    output wire                                         o_uart_tx_8b_start  ,
-    output wire                                         o_uart_tx_32b_start ,
-    output wire                                         o_done              ,
+    output wire [NB_DATA                -1 : 0]     o_uart_data_to_send ,
+    output wire                                     o_uart_tx_8b_start  ,
+    output wire                                     o_uart_tx_32b_start ,
+    output wire                                     o_done              ,
 
-    input wire  [N_BITS_INSTR                -1 : 0]    i_pc                ,
-    input wire  [N_BITS_INSTR * N_BITS_INSTR -1 : 0]    i_registers         ,
-    input wire  [N_BITS_INSTR                -1 : 0]    i_data_memory       ,
-    input wire  [N_BITS_INSTR                -1 : 0]    i_cycles            ,
-    input wire                                          i_uart_tx_done      ,
-    input wire                                          i_uart_tx_32b_done  ,
-    input wire                                          i_uart_tx_8b_done   ,
-    input wire                                          i_execution_mode    ,
-    input wire                                          i_step              ,
-    input wire                                          i_halt              ,
-    input wire                                          i_reset             ,
-    input wire                                          i_clock
+    input wire  [NB_DATA                -1 : 0]     i_pc                ,
+    input wire  [NB_DATA * NB_DATA      -1 : 0]     i_registers         ,
+    input wire  [NB_DATA                -1 : 0]     i_data_memory       ,
+    input wire  [NB_DATA                -1 : 0]     i_cycles            ,
+    input wire                                      i_uart_tx_done      ,
+    input wire                                      i_uart_tx_32b_done  ,
+    input wire                                      i_uart_tx_8b_done   ,
+    input wire                                      i_execution_mode    ,
+    input wire                                      i_step              ,
+    input wire                                      i_halt              ,
+    input wire                                      i_reset             ,
+    input wire                                      i_clock
 );
 
     localparam [NB_STATE    -1 : 0] IDLE_STATE                  = 4'b0000;
@@ -38,8 +36,8 @@ module debug_unit_transmit
 
     reg [NB_STATE       -1 : 0] state;
     reg [NB_STATE       -1 : 0] next_state;
-    reg [N_BITS_INSTR   -1 : 0] data_to_send;
-    reg [N_BITS_INSTR   -1 : 0] data_to_send_output;
+    reg [NB_DATA        -1 : 0] data_to_send;
+    reg [NB_DATA        -1 : 0] data_to_send_output;
     reg                         tx_start_8b_signal;
     reg                         tx_start_32b_signal;
     reg                         tx_start_8b_output;
