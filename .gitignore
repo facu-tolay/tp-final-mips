@@ -1,3 +1,5 @@
 final_mips.*
 tp_mips.*
 vivado*
+*.jou
+*.log

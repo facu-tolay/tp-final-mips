@@ -3,52 +3,38 @@
 
 module top
 #(
-    parameter   NB_DATA   = 6
+    parameter   NB_DATA     = 6     ,
+    parameter   NB_DISPLAY  = 7
 )
 (
-    input wire                      i_switch        ,
-    input wire                      i_clock         ,
-    input wire                      i_reset         ,
+    output wire                             o_uart_tx_data  ,
+    output wire [NB_DATA        - 1 : 0]    o_data          ,
 
-    output wire [NB_DATA - 1 : 0]   o_data
+    input wire                              i_uart_rx_data  ,
+    input wire                              i_switch        ,
+    input wire                              i_reset         ,
+    input wire                              i_clock
 );
 
-    switch_debounce
-    #(
-    )
-    u_switch_debounce
+    // --------------------------------------------------
+    // Debug Unit
+    // --------------------------------------------------
+    debug_unit u_debug_unit
     (
-        .o_signal           (o_data[5] ),
+        .o_uart_tx_data     (o_uart_tx_data         ),
+        .o_execution_mode   (o_data[3]              ),
+        .o_execution_step   (o_data[4]              ),
+        .o_du_done          (o_data[5]              ),
+        .o_state            (o_data[2:0]            ),
 
-        .i_switch           (i_switch  ),
-        .i_clock            (i_clock   ),
-        .i_reset            (i_reset   )
+        .i_uart_rx_data     (i_uart_rx_data         ),
+        .i_halt             (1'b0                   ),
+        .i_pc               (32'hAABBCCDD           ),
+        .i_data_memory      (32'h11223344           ),
+        .i_cycles           (32'h11001100           ),
+        .i_registers        (32'hFFFFFFFF           ),
+        .i_reset            (i_reset                ),
+        .i_clock            (i_clock                )
     );
-
-    // --------------------------------------------------
-    // Fetch stage
-    // --------------------------------------------------
-    fetch_stage
-    #(
-    )
-    u_fetch_stage
-    (
-        .o_pc_next          (           ),
-        .o_instruction      (           ),
-        .o_rs               (o_data[4:0]),
-        .o_rt               (           ),
-
-        .i_pc_next          (           ),
-        .i_stall            (1'b0       ),
-        .i_pc_src           (1'b0       ),
-        .i_valid            (1'b1       ),
-        .i_clock            (i_clock    ),
-        .i_reset            (i_reset    )
-    );
-
-    // --------------------------------------------------
-    // Output block
-    // --------------------------------------------------
-    // assign o_data           = data_result           ;
 
 endmodule
