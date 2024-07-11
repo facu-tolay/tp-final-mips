@@ -43,7 +43,6 @@ module decode_stage
     input wire                          i_execution_mode       ,
     input wire                          i_step                 ,
     input wire [NB_REGISTER     -1 : 0] i_rt_index             ,
-    input wire                          i_mem_read_index       ,
     input wire                          i_valid                ,
     input wire                          i_reset                ,
     input wire                          i_clock
