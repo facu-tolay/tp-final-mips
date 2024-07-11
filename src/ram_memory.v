@@ -55,8 +55,8 @@ module ram_memory
     // end
     always @(posedge i_clock) begin : wr_data_block
         if(i_reset) begin
-            memory[0]  <= 32'hAABBCCDD;
-            memory[1]  <= 32'h11223344;
+            memory[0]  <= 32'b001000_00100_01001_0000000011101110; // addi     r4, r9 , 0x00EE
+            memory[1]  <= 32'b001000_00111_01010_0001000110101010; // addi     r7, r10, 0x11AA
             memory[2]  <= 32'h66778899;
             memory[3]  <= 32'h11001100;
             memory[4]  <= 32'h44445555;
@@ -86,18 +86,18 @@ endmodule
 // --------------------------------------------------
     // always @(posedge i_clock) begin : wr_data_block
     //     if(i_reset) begin
-    //         memory[0]  <= 32'hAABBCCDD;
-    //         memory[1]  <= 32'h11223344;
-    //         memory[2]  <= 32'h66778899;
-    //         memory[3]  <= 32'h11001100;
-    //         memory[4]  <= 32'h44445555;
-    //         memory[5]  <= 32'hF6F62828;
-    //         memory[6]  <= 32'hA1A2A3A4;
-    //         memory[7]  <= 32'hB1B2B3B4;
-    //         memory[8]  <= 32'hFF00FF00;
-    //         memory[9]  <= 32'h88448844;
-    //         memory[10] <= 32'h12341234;
-    //         memory[11] <= 32'h99999999;
+            // memory[0]  <= 32'b001000_00100_01001_0000000011101110; // addi     r4, r9 , 0x00EE
+            // memory[1]  <= 32'b001000_00111_01010_0001000110101010; // addi     r7, r10, 0x11AA
+            // memory[2]  <= 32'h66778899;
+            // memory[3]  <= 32'h11001100;
+            // memory[4]  <= 32'h44445555;
+            // memory[5]  <= 32'hF6F62828;
+            // memory[6]  <= 32'hA1A2A3A4;
+            // memory[7]  <= 32'hB1B2B3B4;
+            // memory[8]  <= 32'hFF00FF00;
+            // memory[9]  <= 32'h88448844;
+            // memory[10] <= 32'h12341234;
+            // memory[11] <= 32'h99999999;
     //     end
     //     else if (write_enable && i_write_data_next) begin
     //         memory[write_address] <= i_write_data;

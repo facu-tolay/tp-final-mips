@@ -5,7 +5,7 @@ module register_bank
     parameter   NB_REGISTER = 5
 )
 (
-    output reg [NB_DATA     -1 : 0] o_data_read_reg_0   ,
+    output reg [NB_DATA     -1 : 0] o_data_read_reg_0   , // FIXME cambiar a wire
     output reg [NB_DATA     -1 : 0] o_data_read_reg_1   ,
 
     // INPUTS
