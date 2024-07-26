@@ -33,7 +33,7 @@ module data_memory
     //     end
     // end
 
-    always @(negedge i_clock) begin : write_block
+    always @(posedge i_clock) begin : write_block
         if (i_valid && i_write_enable) begin
             DRAM[i_address] <= i_write_data;
         end
