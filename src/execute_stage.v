@@ -96,6 +96,22 @@ module execute_stage
     reg             reg_write;
     reg             halt;
 
+    // Output registers
+    reg                      branch_out;
+    reg [2           -1 : 0] jump_out;
+    reg                      mem_read_out;
+    reg                      mem_write_out;
+    reg                      mem_to_reg_out;
+    reg                      reg_write_out;
+    reg                      halt_out;
+    reg [NB_DATA     -1 : 0] pc_4_out;
+    reg [NB_DATA     -1 : 0] pc_branch_out;
+    reg [NB_DATA     -1 : 0] alu_result_out;
+    reg [NB_DATA     -1 : 0] read_data_2_out;
+    reg [NB_REGISTER    : 0] opcode_out;
+    reg [NB_REGISTER -1 : 0] rt_rd_out;
+    reg                      zero_out;
+
     // --------------------------------------------------
     // MUX dato A forwarding
     // --------------------------------------------------
@@ -212,55 +228,55 @@ module execute_stage
     // --------------------------------------------------
     always @(negedge i_clock) begin : write_outputs
         if(i_reset) begin
-            o_branch      <= 1'b0;
-            o_mem_read    <= 1'b0;
-            o_mem_write   <= 1'b0;
-            o_mem_to_reg  <= 1'b0;
-            o_reg_write   <= 1'b0;
-            o_jump        <= 2'b0;
-            o_halt        <= 1'b0;
+            branch_out      <= 1'b0;
+            mem_read_out    <= 1'b0;
+            mem_write_out   <= 1'b0;
+            mem_to_reg_out  <= 1'b0;
+            reg_write_out   <= 1'b0;
+            jump_out        <= 2'b0;
+            halt_out        <= 1'b0;
 
-            o_opcode      <= {NB_REGISTER+1{1'b0}};
-            o_pc_4        <= {NB_DATA{1'b0}};
-            o_pc_branch   <= {NB_DATA{1'b0}};
-            o_alu_result  <= {NB_DATA{1'b0}};
-            o_read_data_2 <= {NB_DATA{1'b0}};
-            o_rt_rd       <= {NB_REGISTER{1'b0}};
-            o_zero        <= {NB_REGISTER{1'b0}};
+            opcode_out      <= {NB_REGISTER+1{1'b0}};
+            pc_4_out        <= {NB_DATA{1'b0}};
+            pc_branch_out   <= {NB_DATA{1'b0}};
+            alu_result_out  <= {NB_DATA{1'b0}};
+            read_data_2_out <= {NB_DATA{1'b0}};
+            rt_rd_out       <= {NB_REGISTER{1'b0}};
+            zero_out        <= {NB_REGISTER{1'b0}};
         end
         else if(i_valid && ~i_flush) begin
             if(i_exec_mode == 1'b0 || (i_exec_mode && i_step)) begin
-                o_pc_4        <= pc_4;
-                o_halt        <= halt;
-                o_branch      <= branch;
-                o_jump        <= jump;
-                o_mem_read    <= mem_read;
-                o_mem_write   <= mem_write;
-                o_mem_to_reg  <= mem_to_reg;
-                o_reg_write   <= reg_write;
-                o_pc_branch   <= pc_branch;
-                o_alu_result  <= alu_result;
-                o_read_data_2 <= read_data_2;
-                o_opcode      <= opcode;
-                o_rt_rd       <= rt_rd;
-                o_zero        <= zero;
+                pc_4_out        <= pc_4;
+                halt_out        <= halt;
+                branch_out      <= branch;
+                jump_out        <= jump;
+                mem_read_out    <= mem_read;
+                mem_write_out   <= mem_write;
+                mem_to_reg_out  <= mem_to_reg;
+                reg_write_out   <= reg_write;
+                pc_branch_out   <= pc_branch;
+                alu_result_out  <= alu_result;
+                read_data_2_out <= read_data_2;
+                opcode_out      <= opcode;
+                rt_rd_out       <= rt_rd;
+                zero_out        <= zero;
             end
         end
         else begin
-            o_jump        <= 2'b0;
-            o_branch      <= 1'b0;
-            o_mem_read    <= 1'b0;
-            o_mem_write   <= 1'b0;
-            o_mem_to_reg  <= 1'b0;
-            o_reg_write   <= 1'b0;
-            o_halt        <= 1'b0;
+            jump_out        <= 2'b0;
+            branch_out      <= 1'b0;
+            mem_read_out    <= 1'b0;
+            mem_write_out   <= 1'b0;
+            mem_to_reg_out  <= 1'b0;
+            reg_write_out   <= 1'b0;
+            halt_out        <= 1'b0;
 
-            o_pc_4        <= {NB_DATA{1'b0}};
-            o_alu_result  <= {NB_DATA{1'b0}};
-            o_read_data_2 <= {NB_DATA{1'b0}};
-            o_rt_rd       <= {NB_REGISTER{1'b0}};
-            o_zero        <= {NB_REGISTER{1'b0}};
-            o_opcode      <= {NB_REGISTER+1{1'b0}}; 
+            pc_4_out        <= {NB_DATA{1'b0}};
+            alu_result_out  <= {NB_DATA{1'b0}};
+            read_data_2_out <= {NB_DATA{1'b0}};
+            rt_rd_out       <= {NB_REGISTER{1'b0}};
+            zero_out        <= {NB_REGISTER{1'b0}};
+            opcode_out      <= {NB_REGISTER+1{1'b0}}; 
         end
     end
 
@@ -287,6 +303,24 @@ module execute_stage
         .i_function         (opcode         ),
         .i_alu_operation    (i_alu_op       )
     );
+
+    // --------------------------------------------------
+    // Output assignments
+    // --------------------------------------------------
+    assign o_branch         = branch_out;
+    assign o_jump           = jump_out;
+    assign o_mem_read       = mem_read_out;
+    assign o_mem_write      = mem_write_out;
+    assign o_mem_to_reg     = mem_to_reg_out;
+    assign o_reg_write      = reg_write_out;
+    assign o_halt           = halt_out;
+    assign o_pc_4           = pc_4_out;
+    assign o_pc_branch      = pc_branch_out;
+    assign o_alu_result     = alu_result_out;
+    assign o_read_data_2    = read_data_2_out;
+    assign o_opcode         = opcode_out;
+    assign o_rt_rd          = rt_rd_out;
+    assign o_zero           = zero_out;
 
 endmodule
 
