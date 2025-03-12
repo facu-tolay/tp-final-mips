@@ -128,7 +128,6 @@ module pipeline_top
         .i_reset            (i_reset            )
     );
 
-
     // --------------------------------------------------
     // Decode stage
     // --------------------------------------------------
@@ -173,6 +172,56 @@ module pipeline_top
         .i_flush                (flush                  ),
         .i_execution_mode       (i_execution_mode       ),
         .i_rt_index             (rt                     ),
+        .i_valid                (i_valid                ),
+        .i_reset                (i_reset                ),
+        .i_clock                (i_clock                )
+    );
+
+    // --------------------------------------------------
+    // Execution stage
+    // --------------------------------------------------
+    execute_stage u_execute_stage
+    (
+        .o_branch               (branch_e               ),
+        .o_mem_read             (memrd_e                ),
+        .o_mem_write            (memwr_e                ),
+        .o_jump                 (jump_e                 ),
+        .o_mem_to_reg           (memtoreg_e             ),
+        .o_reg_write            (regwr_e                ),
+        .o_pc_branch            (pc_branch              ),
+        .o_alu_result           (aluResult              ),
+        .o_halt                 (halt_e                 ),
+        .o_opcode               (opcode_e               ),
+        .o_pc_4                 (pc_4_e                 ),
+        .o_read_data_2          (read_data_2_e          ),
+        .o_rt_rd                (rt_rd                  ),
+        .o_zero                 (zero                   ),
+
+        .i_alu_op               (aluop                  ),
+        .i_alu_src              (alusrc                 ),
+        .i_reg_dst              (regdst                 ),
+        .i_branch               (branch                 ),
+        .i_jump                 (jump                   ),
+        .i_mem_read             (memrd                  ),
+        .i_mem_write            (memwr                  ),
+        .i_mem_to_reg           (memtoreg               ),
+        .i_reg_write            (regwr                  ),
+        .i_halt                 (halt_d                 ),
+        .i_pc_4                 (pc_4_d                 ),
+        .i_read_data_1          (read_data_1            ),
+        .i_read_data_2          (read_data_2            ),
+        .i_extended             (extended               ),
+        .i_opcode               (opcode                 ),
+        .i_alu_result           (aluResult              ),
+        .i_data_memory          (write_data             ),
+        .i_execution_mode       (i_execution_mode       ),
+        .i_step                 (i_step                 ),
+        .i_rd                   (rd                     ),
+        .i_rt                   (rt_d                   ),
+        .i_sa                   (sa                     ),
+        .i_mux_A                (muxA                   ),
+        .i_mux_B                (muxB                   ),
+        .i_flush                (flush_m                ),
         .i_valid                (i_valid                ),
         .i_reset                (i_reset                ),
         .i_clock                (i_clock                )

@@ -7,25 +7,25 @@ module execute_stage
     // --------------------------------------------------
     // MEM - Señales de control para acceso a memoria
     // --------------------------------------------------
-    output reg                      o_branch        ,
-    output reg [2           -1 : 0] o_jump          ,
-    output reg                      o_mem_read      ,
-    output reg                      o_mem_write     ,
+    output wire                      o_branch        ,
+    output wire [2           -1 : 0] o_jump          ,
+    output wire                      o_mem_read      ,
+    output wire                      o_mem_write     ,
 
     // --------------------------------------------------
     // WB  - Señales de control para write-back
     // --------------------------------------------------
-    output reg                      o_mem_to_reg    ,
-    output reg                      o_reg_write     ,
-    output reg                      o_halt          ,
+    output wire                      o_mem_to_reg    ,
+    output wire                      o_reg_write     ,
+    output wire                      o_halt          ,
 
-    output reg [NB_DATA     -1 : 0] o_pc_4          ,
-    output reg [NB_DATA     -1 : 0] o_pc_branch     ,
-    output reg [NB_DATA     -1 : 0] o_alu_result    ,
-    output reg [NB_DATA     -1 : 0] o_read_data_2   ,
-    output reg [NB_REGISTER    : 0] o_opcode        ,
-    output reg [NB_REGISTER -1 : 0] o_rt_rd         ,
-    output reg                      o_zero          ,
+    output wire [NB_DATA     -1 : 0] o_pc_4          ,
+    output wire [NB_DATA     -1 : 0] o_pc_branch     ,
+    output wire [NB_DATA     -1 : 0] o_alu_result    ,
+    output wire [NB_DATA     -1 : 0] o_read_data_2   ,
+    output wire [NB_REGISTER    : 0] o_opcode        ,
+    output wire [NB_REGISTER -1 : 0] o_rt_rd         ,
+    output wire                      o_zero          ,
 
     // --------------------------------------------------
     // EX  - Señales de control para ejecucion
@@ -61,7 +61,7 @@ module execute_stage
     input wire [NB_REGISTER -1 : 0] i_sa            ,
 
     input wire                      i_flush         ,
-    input wire                      i_exec_mode     ,
+    input wire                      i_execution_mode,
     input wire                      i_step          ,
     
     // --------------------------------------------------
@@ -116,7 +116,7 @@ module execute_stage
     // MUX dato A forwarding
     // --------------------------------------------------
     always @(*) begin
-        if(i_valid && (i_exec_mode == 1'b0 || (i_exec_mode && i_step))) begin
+        if(i_valid && (i_execution_mode == 1'b0 || (i_execution_mode && i_step))) begin
             case(alu_opcode)
                 4'b0110,
                 4'b1011,
@@ -128,7 +128,7 @@ module execute_stage
                     case(i_mux_A)
                         2'b00  : dato_a = i_read_data_1;
                         2'b01  : dato_a = i_data_memory;
-                        2'b10  : dato_a = i_alu_result;
+                        2'b10  : dato_a = i_alu_result; // FIXME cambiar a o_alu_result o su registro y eliminar i_alu_result
                         default: dato_a = {NB_DATA{1'b0}};
                     endcase
                 end
@@ -143,11 +143,11 @@ module execute_stage
     // MUX dato B forwarding
     // --------------------------------------------------
     always @(*) begin
-        if(i_valid && (i_exec_mode == 1'b0 || (i_exec_mode && i_step))) begin
+        if(i_valid && (i_execution_mode == 1'b0 || (i_execution_mode && i_step))) begin
             case(i_mux_B)
                 2'b00  : dato_b_fowarding = i_read_data_2;
                 2'b01  : dato_b_fowarding = i_data_memory;
-                2'b10  : dato_b_fowarding = i_alu_result;
+                2'b10  : dato_b_fowarding = i_alu_result; // FIXME cambiar a o_alu_result o su registro y eliminar i_alu_result
                 default: dato_b_fowarding = {NB_DATA{1'b0}};
             endcase
         end
@@ -160,7 +160,7 @@ module execute_stage
     // MUX 3 setea el valor de entrada del dato B
     // --------------------------------------------------
     always @(*) begin
-        if(i_valid && (i_exec_mode == 1'b0 || (i_exec_mode && i_step))) begin
+        if(i_valid && (i_execution_mode == 1'b0 || (i_execution_mode && i_step))) begin
             if(i_alu_src) begin
                 dato_b = i_extended;
             end
@@ -183,7 +183,7 @@ module execute_stage
         if(i_reset) begin
             rt_rd = {NB_REGISTER{1'b0}};
         end
-        else if(i_valid && (i_exec_mode == 1'b0 || (i_exec_mode && i_step))) begin
+        else if(i_valid && (i_execution_mode == 1'b0 || (i_execution_mode && i_step))) begin
             rt_rd = i_reg_dst ? i_rd : i_rt;
         end
         else begin
@@ -208,7 +208,7 @@ module execute_stage
            opcode        <= {NB_REGISTER+1{1'b0}};
            read_data_2   <= {NB_DATA{1'b0}};
        end
-       else if(i_valid && (i_exec_mode == 1'b0 || (i_exec_mode && i_step))) begin
+       else if(i_valid && (i_execution_mode == 1'b0 || (i_execution_mode && i_step))) begin
            halt        <= i_halt;
            branch      <= i_branch;
            mem_read    <= i_mem_read;
@@ -245,7 +245,7 @@ module execute_stage
             zero_out        <= {NB_REGISTER{1'b0}};
         end
         else if(i_valid && ~i_flush) begin
-            if(i_exec_mode == 1'b0 || (i_exec_mode && i_step)) begin
+            if(i_execution_mode == 1'b0 || (i_execution_mode && i_step)) begin
                 pc_4_out        <= pc_4;
                 halt_out        <= halt;
                 branch_out      <= branch;
