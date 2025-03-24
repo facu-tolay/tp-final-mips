@@ -4,12 +4,9 @@
 ## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
 
 # Clock signal
-#set_property PACKAGE_PIN W5 [get_ports i_clock]
-#    set_property IOSTANDARD LVCMOS33 [get_ports i_clock]
-#create_clock -add -name main_clock -period 20 -waveform {0 10} [get_ports i_clock]
-
-set_property PACKAGE_PIN W5 [get_ports i_clk]
-set_property IOSTANDARD LVCMOS33 [get_ports i_clk]
+set_property PACKAGE_PIN W5 [get_ports i_clock]
+set_property IOSTANDARD LVCMOS33 [get_ports i_clock]
+# create_clock -add -name main_clock -period 10 -waveform {0 10} [get_ports i_clock]
 
 # set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets i_clock_IBUF]
 

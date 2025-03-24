@@ -9,7 +9,10 @@ module suodv2
     parameter N_MEMORY_BYTES    = 128       // N bytes de memoria separados en 32 bits
 )
 (
-    input                       i_clk, i_reset, i_is_end, i_tx_done_32b_word,
+    input                       i_clk,
+    input                       i_reset,
+    input                       i_is_end,
+    input                       i_tx_done_32b_word,
 
     // Comunicacion con UART
     input   [TAM_ORDEN-1:0]     i_orden,
