@@ -168,12 +168,8 @@ module suodv2
                 if(~i_fifo_empty) begin
                     case(i_orden)
                         "S"     : state_next = next;
-                        // "T"     : state_next = inc_point_reg;
                         "R"     : state_next = read_reg;
-                        // "E"     : state_next = dec_point_reg;
-                        // ","     : state_next = inc_point_mem;
                         "M"     : state_next = read_mem;
-                        // "N"     : state_next = dec_point_mem;
                         "C"     : state_next = reset_pc;
                         "F"     : state_next = flush_prog;
                         "P"     : state_next = read_pc;
@@ -193,11 +189,6 @@ module suodv2
             end
 
             read_reg: begin
-                // enable_enviada_data_next = 1;
-                // data_enviada_next        = i_debug_read_reg;
-                // led_next                 = i_debug_read_reg;
-                // state_next               = idle;
-
                 case (substate_reg)
                     4'h0: begin // seteo inicial
                         enable_enviada_data_next = 1'b0;
@@ -245,33 +236,7 @@ module suodv2
                 endcase
             end
 
-            // inc_point_reg:
-            // begin
-            //     enable_enviada_data_next    =   1;
-          
-            //     debug_direcc_reg_next   =   debug_direcc_reg_reg +  1;
-            //     data_enviada_next       =   debug_direcc_reg_reg +  1;
-            //     led_next                =   debug_direcc_reg_reg +  1;
-
-            //     state_next              =   idle; 
-            // end
-            // dec_point_reg:
-            // begin            
-            //     enable_enviada_data_next    =   1;
-
-            //     debug_direcc_reg_next   =   debug_direcc_reg_reg -  1;
-            //     data_enviada_next       =   debug_direcc_reg_reg -  1;
-            //     led_next                =   debug_direcc_reg_reg -  1;
-
-            //     state_next              =   idle; 
-            // end
-
             read_mem: begin
-                // enable_enviada_data_next    =   1;
-                // data_enviada_next           =   i_debug_read_mem;
-                // led_next                    =   i_debug_read_mem;
-                // state_next                  =   idle;
-
                 case (substate_reg)
                     4'h0: begin // seteo inicial
                         enable_enviada_data_next = 1'b0;
@@ -319,25 +284,6 @@ module suodv2
                 endcase
             end
 
-            // inc_point_mem:
-            // begin            
-            //     enable_enviada_data_next    =   1;
-
-            //     debug_direcc_mem_next   =   debug_direcc_mem_reg + 4;
-            //     data_enviada_next       =   debug_direcc_mem_reg + 4;
-            //     led_next                =   debug_direcc_mem_reg + 4;
-            //     state_next              =   idle; 
-            // end
-            // dec_point_mem:
-            // begin 
-            //     enable_enviada_data_next    =   1;
-
-            //     debug_direcc_mem_next   =   debug_direcc_mem_reg - 4;
-            //     data_enviada_next       =   debug_direcc_mem_reg - 4;
-            //     led_next                =   debug_direcc_mem_reg - 4;
-            //     state_next              =   idle; 
-            // end
-
             reset_pc: begin
                 pc_reset_next = 1;
                 state_next    = idle;
@@ -360,7 +306,7 @@ module suodv2
             bootloader:
             begin
                 if(programa_cargado_reg)
-                     state_next              =   idle;               
+                     state_next              =   idle;
                 else
                 begin
                      if(~i_fifo_empty)
@@ -374,9 +320,9 @@ module suodv2
                           begin
                                 bootload_write_next     =   0; 
                                 programa_cargado_next   =   1;
-                                state_next              =   idle;               
+                                state_next              =   idle;
                           end    
-                          instruccion_counter_next   =   instruccion_counter_reg + 1;                        
+                          instruccion_counter_next   =   instruccion_counter_reg + 1;
                      end
                      else
                           bootload_write_next =   0;

@@ -59,22 +59,11 @@ module top#(
     wire    [TAM_DATA - 1 : 0]      palabra_de_suod_a_separador;
     wire    [TAM_BYTE - 1 : 0]      orden_de_uart_a_suod;
     wire                            fifo_vacia_de_uart_a_suod;
-    
-   // clk_wiz_0 clk_wiz
-   // (
-   //  // Clock out ports
-   //  .clk_out64MHz(clk_out64MHz),     // output clk_out25MHz
-   //  // Status and control signals
-   //  .reset(i_reset), // input reset
-   //  .locked(locked),       // output locked
-   // // Clock in ports
-   //  .clk_in1(i_clk));      // input clk_in1
 
     clock_divider u_clock_div
     (
         .o_clock_div  (clock_1_4    ),
         .i_clock      (i_clk        ),
-        // .i_reset      (i_reset      )
         .i_reset      (1'b0         )
     );
 
@@ -93,12 +82,10 @@ module top#(
         debug_read_reg_de_mips_a_suod,
         debug_read_mem_de_mips_a_suod,
         debug_read_pc_de_mips_a_suod
-        
     );
-    
+
     // Verilog code for ALU
     suodv2 u_suodv2(
-            // clk_out64MHz, i_reset, is_end_de_mips_a_suod, uart_tx_done_32b,
             clock_1_4, i_reset, is_end_de_mips_a_suod, uart_tx_done_32b,
             orden_de_uart_a_suod,
             enable_de_suod_a_sepador,
@@ -122,27 +109,8 @@ module top#(
             byte_de_suod_a_bootloader,
             o_programa_cargado,
             o_programa_no_cargado,
-            o_leds     
-        );       
-     
-     // separador_bytes separadorDeBytes(
-     //    clk_out64MHz, i_reset,
-     //    palabra_de_suod_a_separador,
-     //    enable_de_suod_a_sepador,
-    
-     //    byte_de_separador_a_uart,
-     //    enable_de_sepador_a_uart
-     // );
-     
-     // uart#(
-     //         .DVSR(326),
-     //    .DVSR_BIT(9)
-     //   )uartSuod
-     //  (.clk(clk_out64MHz), .reset(i_reset), .rd_uart(read_enable_de_suod_a_uart),
-     //   .wr_uart(enable_de_sepador_a_uart), .rx(i_Rx), .w_data(byte_de_separador_a_uart),
-     //   .tx_full(uart_tx_done_32b), .rx_empty(fifo_vacia_de_uart_a_suod),
-     //   .r_data(orden_de_uart_a_suod), .tx(o_Tx)
-     //   );
+            o_leds
+        );
 
     // --------------------------------------------------
     // UART
