@@ -1,0 +1,10 @@
+[PC =  0] ADDI R1,R0,28  ; r1 <- r0 + 28 = 28 = 0x001c
+[PC =  4] JALR R2,R1     ; saltar a la dirección con pc = r1 (28) y guardar la dirección de retorno en r2
+[PC =  8] NOP            ; no hacer nada
+[PC = 12] NOP            ; no hacer nada
+[PC = 16] NOP            ; no hacer nada
+[PC = 20] NOP            ; no hacer nada
+[PC = 24] J    10        ; saltar a la dirección con pc = 4 * 10 = 40 (HALT)
+[PC = 28] ADDI R3,R1,100 ; r3 <- r1 + 100 = 28 + 100 = 128 = 0x0080
+[PC = 32] JR   R2        ; saltar a la dirección con pc = r2 (8)
+[PC = 36] HALT           ; fin del programa

@@ -1,0 +1,15 @@
+[PC =  0] ADDI R1,R0,15  ; r1 <- r0 + 15 = 15 = 0x000f
+[PC =  4] SB   R1,0(R0)  ; mem(r0 + 0B) <- r1 = 15 = 0x000f
+[PC =  8] ADDI R2,R1,7   ; r2 <- r1 + 7 = 15 + 7 = 22 = 0x0016
+[PC = 12] SB   R2,8(R0)  ; (r0 + 8B) <- r2 = 22 = 0x16
+[PC = 16] LB   R3,8(R0)  ; r3 <- mem(r0 + 8B) = 22 = 0x16
+[PC = 20] ANDI R4,R3,11  ; r4 <- r3 & 11 = 2 = 0x0002
+[PC = 24] ADDI R4,R4,272 ; r4 <- r4 + 272 = 2 + 272 = 274 = 0x004a
+[PC = 28] SH   R4,12(R0) ; mem(r0 + 12B) <- r4 = 0x004a
+[PC = 32] ORI  R5,R4,10  ; r5 <- r4 & 10 = 282 = 0x011a
+[PC = 36] SW   R5,24(R0) ; mem(r0 + 24B) <- r5 = 2 = 0x0002
+[PC = 40] BEQ  R5,R4,2   ; si r4 == 2 saltar 2 instrucciones
+[PC = 44] ADDI R6,R0,20  ; r6 <- r0 + 20 = 20 = 0x0014
+[PC = 48] BNE  R6,R2,2   ; si r2 != 2 saltar 2 instrucciones
+[PC = 52] ADDI R6,R0,30  ; r6 <- r0 + 30 = 30 = 0x001e
+[PC = 56] HALT           ; fin del programa
