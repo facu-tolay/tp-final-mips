@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module clock_divider
 #(
     parameter NB_CLOCK = 1      // output frequency is given by f = 1/(2*(2^NB_CLOCK))
