@@ -1,33 +1,37 @@
-# Inicialización de valores en registros
+# Inicialización de registros con valores constantes
 ADDI R1, R0, 10      # R1 = 10
-ADDI R2, R0, 4       # R2 = 4 (para desplazamientos)
+ADDI R2, R0, 4       # R2 = 4
 ADDI R3, R0, 20      # R3 = 20
-ADDI R4, R0, -15     # R4 = -15 (valor negativo)
-ADDI R5, R0, 100     # Carga el valor 0x00000064 en R5
-LUI  R15, 43981      # Carga el valor 0xABCD0000 en R15
+ADDI R4, R0, -15     # R4 = -15
+ADDI R5, R0, 100     # R5 = 100
 
-# Almacenamiento en memoria
-SB   R1, 0(R5)       # Guarda el byte de R1 en la dirección 0(R5)
-SH   R2, 2(R5)       # Guarda el halfword de R2 en la dirección 2(R5)
-SW   R3, 4(R5)       # Guarda la palabra de R3 en la dirección 4(R5)
+# Carga de valores en registros
+LUI  R15, 43981      # R15 = 43981 << 16
 
-# Operaciones de desplazamiento
-SLL  R6, R3, 1       # R6 = R3 << 1 (desplazamiento lógico a la izquierda)
-SRL  R7, R3, 1       # R7 = R3 >> 1 (desplazamiento lógico a la derecha)
-SRA  R8, R4, 1       # R8 = R4 >> 1 (desplazamiento aritmético a la derecha)
+# Operaciones de almacenamiento en memoria
+SB   R1, 0(R5)       # Guarda el byte bajo de R1 en Mem[100]
+SH   R2, 2(R5)       # Guarda el halfword de R2 en Mem[102]
+SW   R3, 4(R5)       # Guarda la palabra completa de R3 en Mem[104]
 
-# Carga desde memoria
-LBU  R9, 0(R5)       # Carga el byte sin signo desde la dirección 0(R5)
-LHU  R10, 2(R5)      # Carga el halfword sin signo desde la dirección 2(R5)
-LWU  R11, 4(R5)      # Carga la palabra sin signo desde la dirección 4(R5)
+# Operaciones de desplazamiento (shift)
+SLL  R6, R3, 1       # R6 = R3 << 1 (multiplicación por 2)
+SRL  R7, R3, 1       # R7 = R3 >> 1 (división lógica por 2)
+SRA  R8, R4, 1       # R8 = R4 >>> 1 (división aritmética por 2)
 
-# Operaciones lógicas y adicionales
+# Carga de valores desde la memoria
+LBU  R9, 0(R5)       # R9 = Mem[100] (carga un byte sin signo)
+LHU  R10, 2(R5)      # R10 = Mem[102] (carga un halfword sin signo)
+LWU  R11, 4(R5)      # R11 = Mem[104] (carga una palabra sin signo)
+
+# Operaciones lógicas
 AND  R12, R9, R10    # R12 = R9 & R10
 OR   R13, R10, R11   # R13 = R10 | R11
 XOR  R14, R11, R9    # R14 = R11 ^ R9
 
-# Finalización del programa
-HALT                 # Detener ejecución
+# Fin del programa
+HALT                 # Detiene la ejecución
+
+
 
 
 # Resultados finales de los registros:
