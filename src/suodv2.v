@@ -1,367 +1,395 @@
-module suodv2
+module suodv2 // FIXME cambiar nombre
 #(
-    parameter NUM_LATCH         = 5     ,
-    parameter TAM_ORDEN         = 8     ,
-    parameter TAM_DATA          = 32    ,
-    parameter TAM_DIREC_REG     = 5     ,
-    parameter TAM_DIREC_MEM     = 7     ,
-    parameter N_REGISTERS       = 32    ,    // N registros de 32 bits
-    parameter N_MEMORY_BYTES    = 128       // N bytes de memoria separados en 32 bits
+    parameter NB_DATA                   = 32    ,
+    parameter NB_BYTE                   = 8     ,
+    parameter NB_REG_ADDRESS            = 5     ,
+    parameter NB_MEM_ADDRESS            = 7     ,
+    parameter NB_STATE                  = 4     ,
+    parameter N_STAGES_TRANSITIONS      = 5     ,
+    parameter N_REGISTERS               = 32    , // N registros de 32 bits
+    parameter N_MEMORY_BYTES            = 128     // N bytes de memoria separados en 32 bits
 )
 (
-    input                       i_clk,
-    input                       i_reset,
-    input                       i_is_end,
-    input                       i_tx_done_32b_word,
+    // Control
+    input  wire                                 i_is_end                    ,
+    input  wire                                 i_tx_done_32b_word          ,
 
     // Comunicacion con UART
-    input   [TAM_ORDEN-1:0]     i_orden,
-    output                      o_enable_enviada_data,
-    output  [TAM_DATA-1:0]      o_data_enviada,
+    input  wire [NB_BYTE              -1 : 0]   i_orden                     ,
+    output wire                                 o_enable_uart_send_data     ,
+    output wire [NB_DATA              -1 : 0]   o_data_to_send              ,
 
-    // Enable para los latch
-    output  [NUM_LATCH-1 : 0]   o_enable_latch,
+    // Enable para los registros de transicion entre etapas
+    output wire [N_STAGES_TRANSITIONS -1 : 0]   o_enable_stages_transitions ,
 
     // Lectura en registros
-    input   [TAM_DATA-1:0]      i_debug_read_reg,
-    output  [TAM_DIREC_REG-1:0] o_debug_direcc_reg,
+    input  wire [NB_DATA              -1 : 0]   i_debug_read_reg            ,
+    output wire [NB_REG_ADDRESS       -1 : 0]   o_debug_read_reg_address    ,
 
     // Lectura en memoria
-    input   [TAM_DATA-1:0]      i_debug_read_mem,
-    output  [TAM_DIREC_MEM-1:0] o_debug_direcc_mem,
+    input  wire [NB_DATA              -1 : 0]   i_debug_read_mem            ,
+    output wire [NB_MEM_ADDRESS       -1 : 0]   o_debug_read_mem_address    ,
 
     // interaccion con el pc
-    input   [TAM_DATA-1:0]          i_read_pc,
-    output                          o_pc_reset,
-    output                          o_borrar_programa,
+    input  wire [NB_DATA              -1 : 0]   i_read_pc                   ,
+    output wire                                 o_pc_reset                  ,
+    output wire                                 o_delete_program            ,
 
     // Escritura de la memoria de boot
-    input                           i_fifo_empty,
-    output                          o_read_enable,
-     
-    output                          o_bootload_write,
-    output   [TAM_ORDEN-1:0]        o_bootload_byte,
-     
-    output                          o_programa_cargado,
-    output                          o_programa_no_cargado,
-    output  [TAM_DATA/2 - 1 : 0]    o_leds
+    input  wire                                 i_fifo_empty                ,
+    output wire                                 o_load_program_write        ,
+    output wire [NB_BYTE  -1:0]                 o_load_program_byte         ,
+    output wire                                 o_program_loaded            ,
+
+    output wire [NB_DATA /2 - 1 : 0]            o_leds                      ,
+
+    input  wire                                 i_reset                     ,
+    input  wire                                 i_clock
 );
 
-    // states declaration
-    localparam [3:0]
-        idle          =   4'b0000,
-        next          =   4'b0001,
-        read_reg      =   4'b0010,
-        inc_point_reg =   4'b0011,
-        dec_point_reg =   4'b0100,
-        read_mem      =   4'b0101,
-        inc_point_mem =   4'b0110,
-        dec_point_mem =   4'b0111,
-        read_pc       =   4'b1000,
-        reset_pc      =   4'b1001,
-        bootloader    =   4'b1010,
-        run           =   4'b1011,
-        flush_prog    =   4'b1100;
+    // Serial commands definition
+    localparam RUN_COMMAND          = "E";
+    localparam NEXT_COMMAND         = "N";
+    localparam READ_REG_COMMAND     = "R";
+    localparam READ_MEM_COMMAND     = "M";
+    localparam READ_PC_COMMAND      = "P";
+    localparam RESET_PC_COMMAND     = "C";
+    localparam FLUSH_PROG_COMMAND   = "D";
+    localparam LOAD_PROGRAM_COMMAND = "L";
 
+    // FSM states definition
+    localparam [NB_STATE -1 : 0]  IDLE_STATE         = 4'b0000;
+    localparam [NB_STATE -1 : 0]  RUN_STATE          = 4'b0001;
+    localparam [NB_STATE -1 : 0]  NEXT_STATE         = 4'b0010;
+    localparam [NB_STATE -1 : 0]  READ_REG_STATE     = 4'b0011;
+    localparam [NB_STATE -1 : 0]  READ_MEM_STATE     = 4'b0100;
+    localparam [NB_STATE -1 : 0]  READ_PC_STATE      = 4'b0101;
+    localparam [NB_STATE -1 : 0]  RESET_PC_STATE     = 4'b0110;
+    localparam [NB_STATE -1 : 0]  FLUSH_PROG_STATE   = 4'b0111;
+    localparam [NB_STATE -1 : 0]  LOAD_PROGRAM_STATE = 4'b1000;
 
-    reg  [3:0]               state_reg, state_next;
-    reg  [3:0]               substate_reg, substate_next;
-    
-    reg  [NUM_LATCH-1 : 0]   enable_latch_reg, enable_latch_next;
-    
-    reg                      enable_enviada_data_reg, enable_enviada_data_next;
-    reg  [TAM_DATA-1:0]      data_enviada_reg, data_enviada_next;
-    
-    reg  [TAM_DIREC_REG-1:0] debug_direcc_reg_reg, debug_direcc_reg_next;
-    
-    reg  [TAM_DIREC_MEM-1:0] debug_direcc_mem_reg, debug_direcc_mem_next;
-    
-    reg                      pc_reset_reg, pc_reset_next;
-    reg                      flush_programa_reg, flush_programa_next;
+    // FSM registers
+    reg  [NB_STATE             -1 : 0]  state;
+    reg  [NB_STATE             -1 : 0]  state_next;
+    reg  [NB_STATE             -1 : 0]  substate;
+    reg  [NB_STATE             -1 : 0]  substate_next;
 
-    reg                      bootload_write_reg, bootload_write_next;
-    reg  [TAM_ORDEN-1:0]     bootload_byte_reg, bootload_byte_next;
-    reg                      read_enable_reg;
-    reg                      programa_cargado_reg,   programa_cargado_next;
-    reg  [1:0]               instruccion_counter_reg, instruccion_counter_next;
-    reg  [TAM_DATA/2-1:0]      led_reg, led_next;
+    // Stage transitions flip-flops
+    reg  [N_STAGES_TRANSITIONS -1 : 0]  enable_stages_transitions;
+    reg  [N_STAGES_TRANSITIONS -1 : 0]  enable_stages_transitions_next;
 
-    // body
-    // FSMD state & data registers
-    always @(posedge i_clk) begin
+    reg                                 enable_uart_send_data;
+    reg                                 enable_uart_send_data_next;
+    reg  [NB_DATA              -1 : 0]  data_to_send;
+    reg  [NB_DATA              -1 : 0]  data_to_send_next;
+
+    // Debug read register address
+    reg  [NB_REG_ADDRESS       -1 : 0]  debug_read_reg_address;
+    reg  [NB_REG_ADDRESS       -1 : 0]  debug_read_reg_address_next;
+
+    // Debug read memory address
+    reg  [NB_MEM_ADDRESS       -1 : 0]  debug_read_mem_address;
+    reg  [NB_MEM_ADDRESS       -1 : 0]  debug_read_mem_address_next;
+
+    // Program control
+    reg                                 pc_reset;
+    reg                                 pc_reset_next;
+    reg                                 delete_program;
+    reg                                 delete_program_next;
+
+    // Program loading
+    reg                                 load_program_write;
+    reg                                 load_program_write_next;
+    reg  [NB_BYTE              -1 : 0]  load_program_byte;
+    reg  [NB_BYTE              -1 : 0]  load_program_byte_next;
+    reg                                 is_program_loaded;
+    reg                                 is_program_loaded_next;
+    reg  [2                    -1 : 0]  instruction_counter;
+    reg  [2                    -1 : 0]  instruction_counter_next;
+
+    // Debug LEDs output
+    reg  [NB_DATA/2            -1 : 0]  leds;
+    reg  [NB_DATA/2            -1 : 0]  led_next;
+
+    // --------------------------------------------------
+    // Main FSM registers
+    // --------------------------------------------------
+    always @(posedge i_clock) begin
         if (i_reset) begin
-            state_reg               <= idle;
-            substate_reg            <= 0;
-            enable_latch_reg        <= 0;
-            enable_enviada_data_reg <= 0;
+            state                     <= IDLE_STATE;
+            substate                  <= 0;
 
-            data_enviada_reg        <= 0;
+            is_program_loaded         <= 1'b0;
+            pc_reset                  <= 1'b0;
+            delete_program            <= 1'b0;
 
-            debug_direcc_reg_reg    <= 1;
+            debug_read_reg_address    <= 1;
+            debug_read_mem_address    <= 4;
 
-            debug_direcc_mem_reg    <= 4;
+            enable_stages_transitions <= 0;
 
-            pc_reset_reg            <= 0;
-            flush_programa_reg      <= 0;
+            enable_uart_send_data     <= 1'b0;
+            data_to_send              <= 0;
 
-            instruccion_counter_reg <= 0;
-            bootload_write_reg      <= 0;
-            bootload_byte_reg       <= 0;
+            load_program_write        <= 1'b0;
+            load_program_byte         <= 0;
+            instruction_counter       <= 0;
 
-            programa_cargado_reg    <= 0;
-            led_reg                 <= 0;
+            leds                      <= 16'h0;
         end
         else begin
-            state_reg               <= state_next;
-            substate_reg            <= substate_next;
-            enable_latch_reg        <= enable_latch_next;
-            enable_enviada_data_reg <= enable_enviada_data_next;
-            data_enviada_reg        <= data_enviada_next;
+            state                     <= state_next;
+            substate                  <= substate_next;
 
-            debug_direcc_reg_reg    <= debug_direcc_reg_next;
+            is_program_loaded         <= is_program_loaded_next;
+            pc_reset                  <= pc_reset_next;
+            delete_program            <= delete_program_next;
 
-            debug_direcc_mem_reg    <= debug_direcc_mem_next;
+            debug_read_reg_address    <= debug_read_reg_address_next;
+            debug_read_mem_address    <= debug_read_mem_address_next;
 
-            pc_reset_reg            <= pc_reset_next;
-            flush_programa_reg      <= flush_programa_next;
+            enable_stages_transitions <= enable_stages_transitions_next;
 
-            instruccion_counter_reg <= instruccion_counter_next;
-            bootload_write_reg      <= bootload_write_next;
-            bootload_byte_reg       <= bootload_byte_next;
-                
-            programa_cargado_reg    <= programa_cargado_next;
-            led_reg                 <= led_next;
+            enable_uart_send_data     <= enable_uart_send_data_next;
+            data_to_send              <= data_to_send_next;
+
+            load_program_write        <= load_program_write_next;
+            load_program_byte         <= load_program_byte_next;
+            instruction_counter       <= instruction_counter_next;
+
+            leds                      <= led_next;
         end
     end
 
-    // FSMD next-state logic
+    // --------------------------------------------------
+    // Main FSM logic
+    // --------------------------------------------------
     always @(*) begin
-        state_next               = state_reg;
-        substate_next            = substate_reg;
-        enable_latch_next        = enable_latch_reg;
-        enable_enviada_data_next = enable_enviada_data_reg;
-        data_enviada_next        = data_enviada_reg;
+        state_next                     = state;
+        substate_next                  = substate;
 
-        debug_direcc_reg_next    = debug_direcc_reg_reg;
+        is_program_loaded_next         = is_program_loaded;
+        pc_reset_next                  = pc_reset;
+        delete_program_next            = delete_program;
 
-        debug_direcc_mem_next    = debug_direcc_mem_reg;
+        debug_read_reg_address_next    = debug_read_reg_address;
+        debug_read_mem_address_next    = debug_read_mem_address;
 
-        pc_reset_next            = pc_reset_reg;
-        flush_programa_next      = flush_programa_reg;
+        enable_stages_transitions_next = enable_stages_transitions;
 
-        instruccion_counter_next = instruccion_counter_reg;
-        bootload_write_next      = bootload_write_reg;
-        bootload_byte_next       = bootload_byte_reg;
+        enable_uart_send_data_next     = enable_uart_send_data;
+        data_to_send_next              = data_to_send;
 
-        programa_cargado_next    = programa_cargado_reg;
-        led_next                 = led_reg;
+        load_program_write_next        = load_program_write;
+        load_program_byte_next         = load_program_byte;
+        instruction_counter_next       = instruction_counter;
 
-        read_enable_reg          = 0;
+        led_next                       = leds;
 
-        case (state_reg)
-            idle: begin
-                enable_latch_next        = 0;
-                enable_enviada_data_next = 0;
-                pc_reset_next            = 0;
-                bootload_write_next      = 0;
-                instruccion_counter_next = 0;
-                flush_programa_next      = 0;
-                substate_next            = 0;
+        case (state)
+            IDLE_STATE: begin
+                substate_next                  = 0;
+                pc_reset_next                  = 1'b0;
+                delete_program_next            = 1'b0;
+                enable_stages_transitions_next = 0;
+                enable_uart_send_data_next     = 1'b0;
+                load_program_write_next        = 1'b0;
+                instruction_counter_next       = 0;
 
                 if(~i_fifo_empty) begin
                     case(i_orden)
-                        "S"     : state_next = next;
-                        "R"     : state_next = read_reg;
-                        "M"     : state_next = read_mem;
-                        "C"     : state_next = reset_pc;
-                        "F"     : state_next = flush_prog;
-                        "P"     : state_next = read_pc;
-                        "B"     : state_next = bootloader;
-                        "G"     : state_next = run;
-                        default : state_next = idle;
+                        RUN_COMMAND          : state_next = RUN_STATE;
+                        NEXT_COMMAND         : state_next = NEXT_STATE;
+                        READ_REG_COMMAND     : state_next = READ_REG_STATE;
+                        READ_MEM_COMMAND     : state_next = READ_MEM_STATE;
+                        READ_PC_COMMAND      : state_next = READ_PC_STATE;
+                        RESET_PC_COMMAND     : state_next = RESET_PC_STATE;
+                        FLUSH_PROG_COMMAND   : state_next = FLUSH_PROG_STATE;
+                        LOAD_PROGRAM_COMMAND : state_next = LOAD_PROGRAM_STATE;
+                        default              : state_next = IDLE_STATE;
                     endcase
-                    read_enable_reg = 1;
                 end
             end
 
-            next: begin
+            RUN_STATE: begin
                 if (~i_is_end) begin
-                    enable_latch_next = {NUM_LATCH{1'b1}};
+                    enable_stages_transitions_next = {N_STAGES_TRANSITIONS{1'b1}};
                 end
-                state_next = idle;
+                else begin
+                    state_next = IDLE_STATE;
+                end
             end
 
-            read_reg: begin
-                case (substate_reg)
+            NEXT_STATE: begin
+                if (~i_is_end) begin
+                    enable_stages_transitions_next = {N_STAGES_TRANSITIONS{1'b1}};
+                end
+                state_next = IDLE_STATE;
+            end
+
+            READ_REG_STATE: begin
+                case (substate)
                     4'h0: begin // seteo inicial
-                        enable_enviada_data_next = 1'b0;
-                        debug_direcc_reg_next    = 5'h0;
-                        led_next                 = 16'hFFFF;
-                        substate_next            = substate_reg + 4'h1;
-                        state_next               = read_reg;
+                        enable_uart_send_data_next  = 1'b0;
+                        debug_read_reg_address_next = 5'h0;
+                        led_next                    = 16'hFFFF;
+                        state_next                  = READ_REG_STATE;
+                        substate_next               = substate + 4'h1;
                     end
 
                     4'h1: begin // leer y enviar registro
-                        enable_enviada_data_next = 1'b1;
-                        data_enviada_next        = i_debug_read_reg;
-                        led_next                 = i_debug_read_reg;
-                        state_next               = read_reg;
-                        substate_next            = substate_reg + 4'h1;
+                        enable_uart_send_data_next = 1'b1;
+                        data_to_send_next          = i_debug_read_reg;
+                        led_next                   = i_debug_read_reg;
+                        state_next                 = READ_REG_STATE;
+                        substate_next              = substate + 4'h1;
                     end
 
                     4'h2: begin // esperar fin TX registro
-                        enable_enviada_data_next = 1'b0;
+                        enable_uart_send_data_next = 1'b0;
                         if (i_tx_done_32b_word) begin // si termino de enviar, me voy a incrementar
-                            state_next      = read_reg;
-                            substate_next   = substate_reg + 4'h1;
+                            state_next    = READ_REG_STATE;
+                            substate_next = substate + 4'h1;
                         end
                     end
 
                     4'h3: begin // incremento direccion de registro
-                        enable_enviada_data_next = 1'b0;
-                        if(debug_direcc_reg_reg >= (N_REGISTERS-1)) begin
-                            debug_direcc_reg_next = 5'h0;
-                            state_next            = idle;
-                            substate_next         = 4'h0;
+                        enable_uart_send_data_next = 1'b0;
+                        if(debug_read_reg_address >= (N_REGISTERS-1)) begin
+                            debug_read_reg_address_next = 5'h0;
+                            state_next                  = IDLE_STATE;
+                            substate_next               = 4'h0;
                         end
                         else begin
-                            debug_direcc_reg_next = debug_direcc_reg_reg + 5'h1;
-                            state_next            = read_reg;
-                            substate_next         = 4'h1;
+                            debug_read_reg_address_next = debug_read_reg_address + 5'h1;
+                            state_next                  = READ_REG_STATE;
+                            substate_next               = 4'h1;
                         end
                     end
 
                     default: begin
-                        enable_enviada_data_next = 1'b0;
-                        substate_next            = 4'h0;
-                        state_next               = idle;
+                        enable_uart_send_data_next = 1'b0;
+                        state_next                 = IDLE_STATE;
+                        substate_next              = 4'h0;
                     end
                 endcase
             end
 
-            read_mem: begin
-                case (substate_reg)
+            READ_MEM_STATE: begin
+                case (substate)
                     4'h0: begin // seteo inicial
-                        enable_enviada_data_next = 1'b0;
-                        debug_direcc_mem_next    = 7'h0;
-                        led_next                 = 16'hAAAA;
-                        state_next               = read_mem;
-                        substate_next            = substate_reg + 4'h1;
+                        enable_uart_send_data_next  = 1'b0;
+                        debug_read_mem_address_next = 7'h0;
+                        led_next                    = 16'hAAAA;
+                        state_next                  = READ_MEM_STATE;
+                        substate_next               = substate + 4'h1;
                     end
 
-                    4'h1: begin // leer y enviar registro
-                        enable_enviada_data_next = 1'b1;
-                        data_enviada_next        = i_debug_read_mem;
-                        led_next                 = i_debug_read_mem;
-                        state_next               = read_mem;
-                        substate_next            = substate_reg + 4'h1;
+                    4'h1: begin // leer y enviar posicion de memoria
+                        enable_uart_send_data_next = 1'b1;
+                        data_to_send_next          = i_debug_read_mem;
+                        led_next                   = i_debug_read_mem;
+                        state_next                 = READ_MEM_STATE;
+                        substate_next              = substate + 4'h1;
                     end
 
-                    4'h2: begin // esperar fin TX registro
-                        enable_enviada_data_next = 1'b0;
+                    4'h2: begin // esperar fin TX posicion de memoria
+                        enable_uart_send_data_next = 1'b0;
                         if (i_tx_done_32b_word) begin // si termino de enviar, me voy a incrementar
-                            state_next      = read_mem;
-                            substate_next   = substate_reg + 4'h1;
+                            state_next    = READ_MEM_STATE;
+                            substate_next = substate + 4'h1;
                         end
                     end
 
                     4'h3: begin // incremento direccion de memoria
-                        enable_enviada_data_next = 1'b0;
-                        if(debug_direcc_mem_reg >= (N_MEMORY_BYTES-4)) begin
-                            debug_direcc_mem_next = 7'h0;
-                            state_next            = idle;
-                            substate_next         = 4'h0;
+                        enable_uart_send_data_next = 1'b0;
+                        if(debug_read_mem_address >= (N_MEMORY_BYTES-4)) begin
+                            debug_read_mem_address_next = 7'h0;
+                            state_next                  = IDLE_STATE;
+                            substate_next               = 4'h0;
                         end
                         else begin
-                            debug_direcc_mem_next = debug_direcc_mem_reg + 7'h4;
-                            state_next            = read_mem;
-                            substate_next         = 4'h1;
+                            debug_read_mem_address_next = debug_read_mem_address + 7'h4;
+                            state_next                  = READ_MEM_STATE;
+                            substate_next               = 4'h1;
                         end
                     end
 
                     default: begin
-                        enable_enviada_data_next = 1'b0;
-                        substate_next            = 4'h0;
-                        state_next               = idle;
+                        enable_uart_send_data_next = 1'b0;
+                        state_next                 = IDLE_STATE;
+                        substate_next              = 4'h0;
                     end
                 endcase
             end
 
-            reset_pc: begin
-                pc_reset_next = 1;
-                state_next    = idle;
+            READ_PC_STATE: begin
+                enable_uart_send_data_next = 1'b1;
+                data_to_send_next          = i_read_pc;
+                led_next                   = i_read_pc;
+                state_next                 = IDLE_STATE;
             end
 
-            flush_prog: begin
-                pc_reset_next           =   1;
-                flush_programa_next     =   1;
-                programa_cargado_next   =   0;
-                state_next              =   idle;
+            RESET_PC_STATE: begin
+                pc_reset_next = 1'b1;
+                state_next    = IDLE_STATE;
             end
 
-            read_pc: begin
-                enable_enviada_data_next    =   1;
-                data_enviada_next           =   i_read_pc;
-                led_next                    =   i_read_pc;
-                state_next                  =   idle;
+            FLUSH_PROG_STATE: begin
+                pc_reset_next          = 1'b1;
+                delete_program_next    = 1'b1;
+                is_program_loaded_next = 1'b0;
+                state_next             = IDLE_STATE;
             end
 
-            bootloader:
-            begin
-                if(programa_cargado_reg)
-                     state_next              =   idle;
-                else
-                begin
-                     if(~i_fifo_empty)
-                     begin
-                          bootload_byte_next  =   i_orden;
-                          led_next            =   i_orden;
-
-                          bootload_write_next =   1;
-                          read_enable_reg     =   1;
-                          if(instruccion_counter_reg == 0 && i_orden[6]==1)
-                          begin
-                                bootload_write_next     =   0; 
-                                programa_cargado_next   =   1;
-                                state_next              =   idle;
-                          end    
-                          instruccion_counter_next   =   instruccion_counter_reg + 1;
-                     end
-                     else
-                          bootload_write_next =   0;
-                end
-            end
-
-            run: begin
-                if (~i_is_end) begin
-                    enable_latch_next = {NUM_LATCH{1'b1}};
+            LOAD_PROGRAM_STATE: begin
+                if(is_program_loaded) begin
+                    state_next = IDLE_STATE;
                 end
                 else begin
-                    state_next = idle;
+                    if(~i_fifo_empty) begin
+                        load_program_byte_next  = i_orden;
+                        led_next                = i_orden;
+                        load_program_write_next = 1'b1;
+
+                        if(instruction_counter == 0 && i_orden[6] == 1) begin
+                            load_program_write_next = 1'b0;
+                            is_program_loaded_next  = 1'b1;
+                            state_next              = IDLE_STATE;
+                        end
+                        instruction_counter_next = instruction_counter + 2'h1;
+                    end
+                    else begin
+                        load_program_write_next = 1'b0;
+                    end
                 end
             end
         endcase
     end
-    // output
-     assign  o_read_enable           =   read_enable_reg;
-     assign  o_enable_enviada_data   =   enable_enviada_data_reg;
-     assign  o_data_enviada          =   data_enviada_reg;
-     //Enable para los latch
-     assign  o_enable_latch          =   enable_latch_reg;
-     // Lectura en registros
-     assign  o_debug_direcc_reg      =   debug_direcc_reg_reg;
-     // Lectura en memoria
-     assign  o_debug_direcc_mem      =   debug_direcc_mem_reg;
-     // interaccion con el pc
-     assign  o_pc_reset              =   pc_reset_reg;
-     assign  o_borrar_programa       =   flush_programa_reg;
 
-     // Escritura de la memoria de boot
-     assign  o_bootload_write        =   bootload_write_reg;
-     assign  o_bootload_byte         =   bootload_byte_reg;
-     
-     assign  o_programa_cargado      =   programa_cargado_reg;
-     assign  o_programa_no_cargado   =   ~programa_cargado_reg;
-     assign  o_leds                  =   led_reg;
+    // --------------------------------------------------
+    // Output assignments
+    // --------------------------------------------------
+
+    // Control y estado
+    assign o_program_loaded             = is_program_loaded;
+    assign o_pc_reset                   = pc_reset;
+    assign o_delete_program             = delete_program;
+    assign o_leds                       = leds;
+
+    // Lectura de registros y memoria
+    assign o_debug_read_reg_address     = debug_read_reg_address;
+    assign o_debug_read_mem_address     = debug_read_mem_address;
+
+    // Enable para los registros de transicion entre etapas
+    assign o_enable_stages_transitions  = enable_stages_transitions;
+
+    // TX data
+    assign o_enable_uart_send_data      = enable_uart_send_data;
+    assign o_data_to_send               = data_to_send;
+
+    // Escritura de la memoria de instrucciones
+    assign o_load_program_write         = load_program_write;
+    assign o_load_program_byte          = load_program_byte;
 
 endmodule

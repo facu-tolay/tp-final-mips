@@ -81,12 +81,12 @@ set_property IOSTANDARD LVCMOS33 [get_ports {o_leds[15]}]
 
 
 #7 segment display
-set_property PACKAGE_PIN W7 [get_ports o_programa_cargado]
-set_property IOSTANDARD LVCMOS33 [get_ports o_programa_cargado]
-set_property PACKAGE_PIN W6 [get_ports o_programa_no_cargado]
-set_property IOSTANDARD LVCMOS33 [get_ports o_programa_no_cargado]
-set_property PACKAGE_PIN U8 [get_ports o_programa_terminado]
+set_property PACKAGE_PIN W7 [get_ports o_program_loaded]
+set_property IOSTANDARD LVCMOS33 [get_ports o_program_loaded]
+set_property PACKAGE_PIN W6 [get_ports o_programa_terminado]
 set_property IOSTANDARD LVCMOS33 [get_ports o_programa_terminado]
+# set_property PACKAGE_PIN U8 [get_ports o_programa_no_cargado]
+# set_property IOSTANDARD LVCMOS33 [get_ports o_programa_no_cargado]
 set_property PACKAGE_PIN V8 [get_ports o_test]
 set_property IOSTANDARD LVCMOS33 [get_ports o_test]
 #set_property PACKAGE_PIN U5 [get_ports {seg[4]}]

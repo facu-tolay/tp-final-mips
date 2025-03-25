@@ -4,6 +4,7 @@ import logging
 import threading
 import struct
 from assembler import Assembler
+from api_debug_unit import *
 
 
 class bcolors:
@@ -23,16 +24,6 @@ serial_receive_thread = None
 
 def manage_exception(e):
     logging.error(f'[{__name__}] Exception raised: {repr(e)} | {type(e).__name__}\n@ {__file__}, line {e.__traceback__.tb_lineno}\n')
-
-# recibe un string con un byte en hexa y lo envia por serial. Recibe algo como "E4"
-def send_byte_serial(byte_to_send):
-    global serial_port
-    try:
-        hex_data = bytes.fromhex(byte_to_send) # esto es si se manda un string en byte_to_send que representa el hexadecimal
-        # hex_data = byte_to_send.encode("ascii") # esto es si se manda un string en formato ASCII
-        serial_port.write(hex_data)
-    except Exception as e:
-        manage_exception(e)
 
 def enviar_programa_process(asm_filename):
 
@@ -59,7 +50,8 @@ def enviar_programa_process(asm_filename):
     finally:
         out_file.close()
 
-    serial_port.write(b'B')
+    # serial_port.write(b'B')
+    api_du_enable_load_program(serial_port)
     with open("output_code.hex", "rb") as f:
         while True:
             data = f.read(8)
@@ -78,11 +70,13 @@ def test_program(asm_filename, expected_reg_state):
 
     # le da run
     time.sleep(1)
-    serial_port.write(b'G')
+    # serial_port.write(b'G')
+    api_du_run_program(serial_port)
 
     # toma el valor de los registros y compara
     time.sleep(1)
-    serial_port.write(b'R')
+    # serial_port.write(b'R')
+    api_du_read_registers(serial_port)
     time.sleep(2)
     mips_registers_status = serial_receive_thread.get_last_received_words()
     print(f'registros del MIPS despues de ejecutar:\n{mips_registers_status}\n')
@@ -91,9 +85,11 @@ def test_program(asm_filename, expected_reg_state):
 
     # borrar programa y reset PC
     time.sleep(1)
-    serial_port.write(b'F')
+    # serial_port.write(b'F')
+    api_du_delete_program(serial_port)
     time.sleep(1)
-    serial_port.write(b'C')
+    # serial_port.write(b'C')
+    api_du_reset_pc(serial_port)
 
     print("\ntodo borrado, listo para un nuevo run\n")
 
@@ -126,7 +122,7 @@ def main_menu():
         print("\t 7. Borrar programa")
         print("\t 8. Reset PC\n")
         print("\t 9. Read PC")
-        print("\t 0. Read register")
+        print("\t 0. Read registers")
         print("\t A. Read memory\n")
         print("\t X. Salir")
         choice = input("Selecciona una opción: ")
@@ -188,15 +184,15 @@ def main_menu():
             test_program(program_file, expected_registers)
 
         elif (choice == "7"):
-            serial_port.write(b'F')
+            api_du_delete_program(serial_port)
         elif (choice == "8"):
-            serial_port.write(b'C')
+            api_du_reset_pc(serial_port)
         elif (choice == "9"):
-            serial_port.write(b'P')
+            api_du_read_pc(serial_port)
         elif (choice == "0"):
-            serial_port.write(b'R')
+            api_du_read_registers(serial_port)
         elif (choice == "A"):
-            serial_port.write(b'M')
+            api_du_read_memory(serial_port)
         elif (choice == "X"):
             print("exiting...")
             break
