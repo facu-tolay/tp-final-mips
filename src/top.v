@@ -14,38 +14,38 @@ module top
 )
 (
     output wire [NB_DATA/2 -1 : 0]  o_leds                  ,
-    output wire                     o_Tx                    ,
+    output wire                     o_uart_tx               ,
     output wire                     o_program_loaded        ,
     output wire                     o_programa_terminado    ,
     output wire                     o_test                  ,
 
     input  wire                     i_test                  ,
-    input  wire                     i_Rx                    ,
+    input  wire                     i_uart_rx               ,
     input  wire                     i_reset                 ,
     input  wire                     i_clock
 );
 
-    wire    [NB_DATA              -1 : 0]   debug_read_reg_de_mips_a_suod;
-    wire    [NB_DATA              -1 : 0]   debug_read_mem_de_mips_a_suod;
-    wire    [NB_DATA              -1 : 0]   debug_read_pc_de_mips_a_suod;
-    wire                                    uart_tx_done_32b;
+    wire    [NB_DATA              -1 : 0]   debug_read_reg;
+    wire    [NB_DATA              -1 : 0]   debug_read_mem;
+    wire    [NB_DATA              -1 : 0]   debug_read_pc;
+    wire                                    uart_tx_done;
     wire                                    clock_1_4;
 
-    wire                                    is_end_de_mips_a_suod;
-    wire                                    enable_write_de_suod_a_bootloader;
-    wire                                    pc_reset_de_mips_a_suod;
-    wire                                    borrar_programa_de_mips_a_suod;
-    wire                                    enable_de_suod_a_sepador;
+    wire                                    is_program_end;
+    wire                                    load_program_write_enable;
+    wire                                    pc_reset;
+    wire                                    delete_program;
+    wire                                    uart_enable_send_data;
 
-    wire    [NB_REG_ADDRESS       -1 : 0]   debug_direcc_reg_de_suod_a_mips;
-    wire    [NB_MEM_ADDRESS       -1 : 0]   debug_direcc_mem_de_suod_a_mips;
+    wire    [NB_REG_ADDRESS       -1 : 0]   debug_read_reg_address;
+    wire    [NB_MEM_ADDRESS       -1 : 0]   debug_read_mem_address;
 
-    wire    [NB_BYTE              -1 : 0]   byte_de_suod_a_bootloader;
-    wire    [N_STAGES_TRANSITIONS -1 : 0]   enable_latch_de_suod_a_mips;
+    wire    [NB_BYTE              -1 : 0]   load_program_byte;
+    wire    [N_STAGES_TRANSITIONS -1 : 0]   enable_stages_transitions;
 
-    wire    [NB_DATA              -1 : 0]   palabra_de_suod_a_separador;
-    wire    [NB_BYTE              -1 : 0]   orden_de_uart_a_suod;
-    wire                                    fifo_vacia_de_uart_a_suod;
+    wire    [NB_DATA              -1 : 0]   uart_data_to_send;
+    wire    [NB_BYTE              -1 : 0]   uart_receive_byte;
+    wire                                    uart_receive_byte_done;
 
     // --------------------------------------------------
     // Main clock divider 1/4
@@ -62,59 +62,61 @@ module top
     // --------------------------------------------------
     mips u_mips
     (
-        .o_is_end               (is_end_de_mips_a_suod              ),
-        .o_debug_read_reg       (debug_read_reg_de_mips_a_suod      ),
-        .o_debug_read_mem       (debug_read_mem_de_mips_a_suod      ),
-        .o_read_debug_pc        (debug_read_pc_de_mips_a_suod       ),
+        .o_is_end                       (is_program_end             ),
+        .o_debug_read_reg               (debug_read_reg             ),
+        .o_debug_read_mem               (debug_read_mem             ),
+        .o_read_debug_pc                (debug_read_pc              ),
 
-        .i_bootload_wr_en       (enable_write_de_suod_a_bootloader  ),
-        .i_pc_reset             (pc_reset_de_mips_a_suod            ),
-        .i_borrar_programa      (borrar_programa_de_mips_a_suod     ),
-        .i_latches_en           (enable_latch_de_suod_a_mips        ),
-        .i_bootload_byte        (byte_de_suod_a_bootloader          ),
-        .i_debug_ptr_mem        (debug_direcc_mem_de_suod_a_mips    ),
-        .i_debug_ptr_reg        (debug_direcc_reg_de_suod_a_mips    ),
-        .i_reset                (i_reset                            ),
-        .i_clk                  (clock_1_4                          )
+        .i_bootload_wr_en               (load_program_write_enable  ),
+        .i_pc_reset                     (pc_reset                   ),
+        .i_borrar_programa              (delete_program             ),
+        .i_latches_en                   (enable_stages_transitions  ),
+        .i_bootload_byte                (load_program_byte          ),
+        .i_debug_ptr_mem                (debug_read_mem_address     ),
+        .i_debug_ptr_reg                (debug_read_reg_address     ),
+        .i_reset                        (i_reset                    ),
+        .i_clk                          (clock_1_4                  )
     );
 
     // --------------------------------------------------
     // Debug Unit
     // --------------------------------------------------
-    suodv2 u_suodv2
+    debug_unit u_debug_unit
     (
-        // Control y transmision de datos
-        .i_is_end                       (is_end_de_mips_a_suod              ),
-        .i_tx_done_32b_word             (uart_tx_done_32b                   ),
-        .i_orden                        (orden_de_uart_a_suod               ),
-        .o_enable_uart_send_data        (enable_de_suod_a_sepador           ),
-        .o_data_to_send                 (palabra_de_suod_a_separador        ),
+        // UART communication
+        .i_uart_receive_byte            (uart_receive_byte          ),
+        .i_uart_receive_byte_done       (uart_receive_byte_done     ),
+        .i_uart_tx_done                 (uart_tx_done               ),
+        .o_uart_data_to_send            (uart_data_to_send          ),
+        .o_uart_enable_send_data        (uart_enable_send_data      ),
 
-        // Enable para los latch
-        .o_enable_stages_transitions    (enable_latch_de_suod_a_mips        ),
+        // Stages transitions
+        .o_enable_stages_transitions    (enable_stages_transitions  ),
 
-        // Lectura en registros
-        .i_debug_read_reg               (debug_read_reg_de_mips_a_suod      ),
-        .o_debug_read_reg_address       (debug_direcc_reg_de_suod_a_mips    ),
+        // Registers read
+        .i_debug_read_reg               (debug_read_reg             ),
+        .o_debug_read_reg_address       (debug_read_reg_address     ),
 
-        // Lectura en memoria
-        .i_debug_read_mem               (debug_read_mem_de_mips_a_suod      ),
-        .o_debug_read_mem_address       (debug_direcc_mem_de_suod_a_mips    ),
+        // Memory read
+        .i_debug_read_mem               (debug_read_mem             ),
+        .o_debug_read_mem_address       (debug_read_mem_address     ),
 
-        // interaccion con el PC
-        .i_read_pc                      (debug_read_pc_de_mips_a_suod       ),
-        .o_pc_reset                     (pc_reset_de_mips_a_suod            ),
-        .o_delete_program               (borrar_programa_de_mips_a_suod     ),
+        // PC operations
+        .i_debug_read_pc                (debug_read_pc              ),
+        .o_pc_reset                     (pc_reset                   ),
 
-        // Escritura de la memoria de boot
-        .i_fifo_empty                   (~fifo_vacia_de_uart_a_suod         ),
-        .o_load_program_write           (enable_write_de_suod_a_bootloader  ),
-        .o_load_program_byte            (byte_de_suod_a_bootloader          ),
-        .o_program_loaded               (o_program_loaded                   ),
-        .o_leds                         (o_leds                             ),
+        // Program operations
+        .o_load_program_byte            (load_program_byte          ),
+        .o_load_program_write_enable    (load_program_write_enable  ),
+        .o_program_loaded               (o_program_loaded           ),
+        .o_delete_program               (delete_program             ),
+        .i_mips_program_ended           (is_program_end             ),
 
-        .i_reset                        (i_reset                            ),
-        .i_clock                        (clock_1_4                          )
+        // Status
+        .o_leds                         (o_leds                     ),
+
+        .i_reset                        (i_reset                    ),
+        .i_clock                        (clock_1_4                  )
     );
 
     // --------------------------------------------------
@@ -122,24 +124,24 @@ module top
     // --------------------------------------------------
     uart_32b u_uart
     (
-        .o_data                 (orden_de_uart_a_suod               ),
-        .o_rx_done_pulse        (fifo_vacia_de_uart_a_suod          ),
-        .o_tx                   (o_Tx                               ),
-        .o_tx_done_8b_pulse     (                                   ),
-        .o_tx_done_32b_pulse    (uart_tx_done_32b                   ),
+        .o_data                         (uart_receive_byte          ),
+        .o_rx_done_pulse                (uart_receive_byte_done     ),
+        .o_tx                           (o_uart_tx                  ),
+        .o_tx_done_8b_pulse             (                           ),
+        .o_tx_done_32b_pulse            (uart_tx_done               ),
 
-        .i_rx                   (i_Rx                               ),
-        .i_tx_data              (palabra_de_suod_a_separador        ),
-        .i_tx_start_8b          (1'b0                               ),
-        .i_tx_start_32b         (enable_de_suod_a_sepador           ),
-        .i_reset                (i_reset                            ),
-        .i_clock                (clock_1_4                          )
+        .i_rx                           (i_uart_rx                  ),
+        .i_tx_data                      (uart_data_to_send          ),
+        .i_tx_start_8b                  (1'b0                       ),
+        .i_tx_start_32b                 (uart_enable_send_data      ),
+        .i_reset                        (i_reset                    ),
+        .i_clock                        (clock_1_4                  )
     );
 
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
     assign  o_test                  = i_test;
-    assign  o_programa_terminado    = is_end_de_mips_a_suod;
+    assign  o_programa_terminado    = is_program_end;
 
 endmodule

@@ -1,4 +1,4 @@
-module suodv2 // FIXME cambiar nombre
+module debug_unit
 #(
     parameter NB_DATA                   = 32    ,
     parameter NB_BYTE                   = 8     ,
@@ -10,37 +10,36 @@ module suodv2 // FIXME cambiar nombre
     parameter N_MEMORY_BYTES            = 128     // N bytes de memoria separados en 32 bits
 )
 (
-    // Control
-    input  wire                                 i_is_end                    ,
-    input  wire                                 i_tx_done_32b_word          ,
+    // UART communication
+    input  wire [NB_BYTE              -1 : 0]   i_uart_receive_byte         ,
+    input  wire                                 i_uart_receive_byte_done    ,
+    input  wire                                 i_uart_tx_done              ,
+    output wire [NB_DATA              -1 : 0]   o_uart_data_to_send         ,
+    output wire                                 o_uart_enable_send_data     ,
 
-    // Comunicacion con UART
-    input  wire [NB_BYTE              -1 : 0]   i_orden                     ,
-    output wire                                 o_enable_uart_send_data     ,
-    output wire [NB_DATA              -1 : 0]   o_data_to_send              ,
-
-    // Enable para los registros de transicion entre etapas
+    // Stages transitions
     output wire [N_STAGES_TRANSITIONS -1 : 0]   o_enable_stages_transitions ,
 
-    // Lectura en registros
+    // Registers read
     input  wire [NB_DATA              -1 : 0]   i_debug_read_reg            ,
     output wire [NB_REG_ADDRESS       -1 : 0]   o_debug_read_reg_address    ,
 
-    // Lectura en memoria
+    // Memory read
     input  wire [NB_DATA              -1 : 0]   i_debug_read_mem            ,
     output wire [NB_MEM_ADDRESS       -1 : 0]   o_debug_read_mem_address    ,
 
-    // interaccion con el pc
-    input  wire [NB_DATA              -1 : 0]   i_read_pc                   ,
+    // PC operations
+    input  wire [NB_DATA              -1 : 0]   i_debug_read_pc             ,
     output wire                                 o_pc_reset                  ,
-    output wire                                 o_delete_program            ,
 
-    // Escritura de la memoria de boot
-    input  wire                                 i_fifo_empty                ,
-    output wire                                 o_load_program_write        ,
+    // Program operations
     output wire [NB_BYTE  -1:0]                 o_load_program_byte         ,
+    output wire                                 o_load_program_write_enable ,
     output wire                                 o_program_loaded            ,
+    output wire                                 o_delete_program            ,
+    input  wire                                 i_mips_program_ended        ,
 
+    // Status
     output wire [NB_DATA /2 - 1 : 0]            o_leds                      ,
 
     input  wire                                 i_reset                     ,
@@ -98,7 +97,7 @@ module suodv2 // FIXME cambiar nombre
     reg                                 delete_program_next;
 
     // Program loading
-    reg                                 load_program_write;
+    reg                                 load_program_write_enable;
     reg                                 load_program_write_next;
     reg  [NB_BYTE              -1 : 0]  load_program_byte;
     reg  [NB_BYTE              -1 : 0]  load_program_byte_next;
@@ -131,7 +130,7 @@ module suodv2 // FIXME cambiar nombre
             enable_uart_send_data     <= 1'b0;
             data_to_send              <= 0;
 
-            load_program_write        <= 1'b0;
+            load_program_write_enable <= 1'b0;
             load_program_byte         <= 0;
             instruction_counter       <= 0;
 
@@ -153,7 +152,7 @@ module suodv2 // FIXME cambiar nombre
             enable_uart_send_data     <= enable_uart_send_data_next;
             data_to_send              <= data_to_send_next;
 
-            load_program_write        <= load_program_write_next;
+            load_program_write_enable <= load_program_write_next;
             load_program_byte         <= load_program_byte_next;
             instruction_counter       <= instruction_counter_next;
 
@@ -180,7 +179,7 @@ module suodv2 // FIXME cambiar nombre
         enable_uart_send_data_next     = enable_uart_send_data;
         data_to_send_next              = data_to_send;
 
-        load_program_write_next        = load_program_write;
+        load_program_write_next        = load_program_write_enable;
         load_program_byte_next         = load_program_byte;
         instruction_counter_next       = instruction_counter;
 
@@ -196,8 +195,8 @@ module suodv2 // FIXME cambiar nombre
                 load_program_write_next        = 1'b0;
                 instruction_counter_next       = 0;
 
-                if(~i_fifo_empty) begin
-                    case(i_orden)
+                if(i_uart_receive_byte_done) begin
+                    case(i_uart_receive_byte)
                         RUN_COMMAND          : state_next = RUN_STATE;
                         NEXT_COMMAND         : state_next = NEXT_STATE;
                         READ_REG_COMMAND     : state_next = READ_REG_STATE;
@@ -212,7 +211,7 @@ module suodv2 // FIXME cambiar nombre
             end
 
             RUN_STATE: begin
-                if (~i_is_end) begin
+                if (~i_mips_program_ended) begin
                     enable_stages_transitions_next = {N_STAGES_TRANSITIONS{1'b1}};
                 end
                 else begin
@@ -221,7 +220,7 @@ module suodv2 // FIXME cambiar nombre
             end
 
             NEXT_STATE: begin
-                if (~i_is_end) begin
+                if (~i_mips_program_ended) begin
                     enable_stages_transitions_next = {N_STAGES_TRANSITIONS{1'b1}};
                 end
                 state_next = IDLE_STATE;
@@ -247,7 +246,7 @@ module suodv2 // FIXME cambiar nombre
 
                     4'h2: begin // esperar fin TX registro
                         enable_uart_send_data_next = 1'b0;
-                        if (i_tx_done_32b_word) begin // si termino de enviar, me voy a incrementar
+                        if (i_uart_tx_done) begin // si termino de enviar, me voy a incrementar
                             state_next    = READ_REG_STATE;
                             substate_next = substate + 4'h1;
                         end
@@ -295,7 +294,7 @@ module suodv2 // FIXME cambiar nombre
 
                     4'h2: begin // esperar fin TX posicion de memoria
                         enable_uart_send_data_next = 1'b0;
-                        if (i_tx_done_32b_word) begin // si termino de enviar, me voy a incrementar
+                        if (i_uart_tx_done) begin // si termino de enviar, me voy a incrementar
                             state_next    = READ_MEM_STATE;
                             substate_next = substate + 4'h1;
                         end
@@ -325,8 +324,8 @@ module suodv2 // FIXME cambiar nombre
 
             READ_PC_STATE: begin
                 enable_uart_send_data_next = 1'b1;
-                data_to_send_next          = i_read_pc;
-                led_next                   = i_read_pc;
+                data_to_send_next          = i_debug_read_pc;
+                led_next                   = i_debug_read_pc;
                 state_next                 = IDLE_STATE;
             end
 
@@ -347,12 +346,12 @@ module suodv2 // FIXME cambiar nombre
                     state_next = IDLE_STATE;
                 end
                 else begin
-                    if(~i_fifo_empty) begin
-                        load_program_byte_next  = i_orden;
-                        led_next                = i_orden;
+                    if(i_uart_receive_byte_done) begin
                         load_program_write_next = 1'b1;
+                        load_program_byte_next  = i_uart_receive_byte;
+                        led_next                = i_uart_receive_byte;
 
-                        if(instruction_counter == 0 && i_orden[6] == 1) begin
+                        if(instruction_counter == 0 && i_uart_receive_byte[6] == 1) begin // FIXME hacer que esto sea directamente una escritura de 32b
                             load_program_write_next = 1'b0;
                             is_program_loaded_next  = 1'b1;
                             state_next              = IDLE_STATE;
@@ -363,6 +362,10 @@ module suodv2 // FIXME cambiar nombre
                         load_program_write_next = 1'b0;
                     end
                 end
+            end
+
+            default: begin
+                state_next    = IDLE_STATE;
             end
         endcase
     end
@@ -385,11 +388,11 @@ module suodv2 // FIXME cambiar nombre
     assign o_enable_stages_transitions  = enable_stages_transitions;
 
     // TX data
-    assign o_enable_uart_send_data      = enable_uart_send_data;
-    assign o_data_to_send               = data_to_send;
+    assign o_uart_enable_send_data      = enable_uart_send_data;
+    assign o_uart_data_to_send          = data_to_send;
 
     // Escritura de la memoria de instrucciones
-    assign o_load_program_write         = load_program_write;
+    assign o_load_program_write_enable  = load_program_write_enable;
     assign o_load_program_byte          = load_program_byte;
 
 endmodule
