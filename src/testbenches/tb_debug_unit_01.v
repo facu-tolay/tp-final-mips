@@ -26,22 +26,19 @@ module tb_debug_unit_01();
     reg  [NB_DATA   -1 : 0] registers;
     reg                     halt;
 
-    debug_unit u_debug_unit
-    (
-        .o_uart_tx_data         (uart_tx_data       ),
-        .o_execution_mode       (execution_mode     ),
-        .o_execution_step       (execution_step     ),
-        .o_du_done              (du_done            ),
-        .o_state                (                   ),
+    top u_top_mips
+    ( 
+        .o_Tx                       (       ),
+        .o_programa_cargado         (       ),
+        .o_programa_no_cargado      (       ),
+        .o_programa_terminado       (       ),
+        .o_leds                     (       ),
+        .o_test                     (       ),
 
-        .i_uart_rx_data         (rx_data            ),
-        .i_halt                 (halt               ),
-        .i_pc                   (pc                 ),
-        .i_data_memory          (data_memory        ),
-        .i_cycles               (cycles             ),
-        .i_registers            (registers          ),
-        .i_reset                (reset              ),
-        .i_clock                (clock              )
+        .i_test                     (1'b0   ),
+        .i_Rx                       (rx_data),
+        .i_reset                    (reset  ),
+        .i_clk                      (clock  )
     );
 
     initial begin
@@ -60,58 +57,58 @@ module tb_debug_unit_01();
         @(posedge clock);
 
 
-        // 1) enviar comando de start load program
-        send_data_to_rx(8'h55);
+        // 1) enviar comando de read registers
+        send_data_to_rx("M");
 
         // 2) enviar N instrucciones de 4 bytes
-        send_data_to_rx(8'hAA);
-        send_data_to_rx(8'hBB);
-        send_data_to_rx(8'hCC);
-        send_data_to_rx(8'hDD);
+        // send_data_to_rx(8'hAA);
+        // send_data_to_rx(8'hBB);
+        // send_data_to_rx(8'hCC);
+        // send_data_to_rx(8'hDD);
 
-        send_data_to_rx(8'h11);
-        send_data_to_rx(8'h22);
-        send_data_to_rx(8'h33);
-        send_data_to_rx(8'h44);
+        // send_data_to_rx(8'h11);
+        // send_data_to_rx(8'h22);
+        // send_data_to_rx(8'h33);
+        // send_data_to_rx(8'h44);
 
-        send_data_to_rx(8'h66);
-        send_data_to_rx(8'h77);
-        send_data_to_rx(8'h88);
-        send_data_to_rx(8'h99);
+        // send_data_to_rx(8'h66);
+        // send_data_to_rx(8'h77);
+        // send_data_to_rx(8'h88);
+        // send_data_to_rx(8'h99);
 
-        send_data_to_rx(8'h00);
-        send_data_to_rx(8'h11);
-        send_data_to_rx(8'h00);
-        send_data_to_rx(8'h11);
+        // send_data_to_rx(8'h00);
+        // send_data_to_rx(8'h11);
+        // send_data_to_rx(8'h00);
+        // send_data_to_rx(8'h11);
 
-        send_data_to_rx(8'hB0);
-        send_data_to_rx(8'hB0);
-        send_data_to_rx(8'hB0);
-        send_data_to_rx(8'hB0);
+        // send_data_to_rx(8'hB0);
+        // send_data_to_rx(8'hB0);
+        // send_data_to_rx(8'hB0);
+        // send_data_to_rx(8'hB0);
 
         // 3) enviar fin de programa
-        send_data_to_rx(8'hFF);
-        send_data_to_rx(8'hFF);
-        send_data_to_rx(8'hFF);
-        send_data_to_rx(8'hFF);
+        // send_data_to_rx(8'hFF);
+        // send_data_to_rx(8'hFF);
+        // send_data_to_rx(8'hFF);
+        // send_data_to_rx(8'hFF);
 
         // 4) setear el modo de ejecucion a STEP-BY-STEP
-        send_data_to_rx(8'h01);
+        // send_data_to_rx(8'h01);
 
         // 5) enviar pasos
         repeat(30) begin
             @(posedge clock);
         end
-        send_data_to_rx(8'h01);
+        // send_data_to_rx(8'h01);
 
         // 5.1) esperar que se termine de transmitir todo y mandar otro paso
-        repeat(650*16*256) begin
+        repeat(650*128*256) begin
             @(posedge clock);
         end
-        send_data_to_rx(8'h01);
+        // send_data_to_rx(8'h01);
 
         // 5.2) esperar que se termine de transmitir todo
-        repeat(650*16*256) begin
+        repeat(650*128*256) begin
             @(posedge clock);
         end
 

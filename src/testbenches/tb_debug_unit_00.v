@@ -11,7 +11,7 @@ module tb_debug_unit_00();
     localparam N_CLOCKS_BETWEEN_DATA = 4;
 
     `include "common_defs.v"
-    `include "uart_utils.v"
+    // `include "uart_utils.v"
 
     // --------------------------------------------------
     // DUT Instantiation
@@ -26,22 +26,61 @@ module tb_debug_unit_00();
     reg  [NB_DATA   -1 : 0] registers;
     reg                     halt;
 
-    debug_unit u_debug_unit
-    (
-        .o_uart_tx_data         (uart_tx_data       ),
-        .o_execution_mode       (execution_mode     ),
-        .o_execution_step       (execution_step     ),
-        .o_du_done              (du_done            ),
-        .o_state                (                   ),
+    suodv2 u_suodv2(
+            clk_out64MHz, i_reset, is_end_de_mips_a_suod, uart_tx_done_32b,
+            orden_de_uart_a_suod,
+            enable_de_suod_a_sepador,
+            palabra_de_suod_a_separador,
+    //Enable para los latch
+            enable_latch_de_suod_a_mips,
+    // Lectura en registros
+            debug_read_reg_de_mips_a_suod,
+            debug_direcc_reg_de_suod_a_mips,
+    // Lectura en memoria
+            debug_read_mem_de_mips_a_suod,
+            debug_direcc_mem_de_suod_a_mips, //TODO: o_debug_direcc_mem_de_suod_a_mips?
+    // interaccion con el pc
+            debug_read_pc_de_mips_a_suod,
+            pc_reset_de_mips_a_suod,
+            borrar_programa_de_mips_a_suod,
+    // Escritura de la memoria de boot
+            fifo_vacia_de_uart_a_suod,
+            read_enable_de_suod_a_uart,
+            enable_write_de_suod_a_bootloader,
+            byte_de_suod_a_bootloader,
+            o_programa_cargado,
+            o_programa_no_cargado,
+            o_leds     
+        );       
+     
+     // separador_bytes separadorDeBytes(
+     //    clk_out64MHz, i_reset,
+     //    palabra_de_suod_a_separador,
+     //    enable_de_suod_a_sepador,
+    
+     //    byte_de_separador_a_uart,
+     //    enable_de_sepador_a_uart
+     // );
 
-        .i_uart_rx_data         (rx_data            ),
-        .i_halt                 (halt               ),
-        .i_pc                   (pc                 ),
-        .i_data_memory          (data_memory        ),
-        .i_cycles               (cycles             ),
-        .i_registers            (registers          ),
-        .i_reset                (reset              ),
-        .i_clock                (clock              )
+    // --------------------------------------------------
+    // UART
+    // --------------------------------------------------
+    wire uart_tx_done_32b;
+
+    uart_32b u_uart
+    (
+        .o_data                 (orden_de_uart_a_suod       ),
+        .o_rx_done_pulse        (~fifo_vacia_de_uart_a_suod ),
+        .o_tx                   (o_Tx                       ),
+        .o_tx_done_8b_pulse     (                           ),
+        .o_tx_done_32b_pulse    (uart_tx_done_32b           ),
+
+        .i_rx                   (i_Rx                       ),
+        .i_tx_data              (palabra_de_suod_a_separador),
+        .i_tx_start_8b          (1'b0                       ),
+        .i_tx_start_32b         (enable_de_suod_a_sepador   ),
+        .i_reset                (i_reset                    ),
+        .i_clock                (clk_out64MHz               )
     );
 
     initial begin

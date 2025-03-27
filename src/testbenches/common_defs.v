@@ -12,7 +12,7 @@
 // Clock block
 // --------------------------------------------------
 reg clock;
-always #1 clock = ~clock;
+always #1 clock=~clock; //now you create your cyclic clock
 
 // --------------------------------------------------
 // Reset block
@@ -21,7 +21,7 @@ reg reset;
 task reset_dut;
     begin
         reset = 1'b1;
-        repeat (5) begin
+        repeat (10) begin
             @(posedge clock);
         end
         reset = 1'b0;

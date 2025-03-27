@@ -1,4 +1,4 @@
-module debug_unit
+module debug_unitold
 #
 (
     parameter NB_DATA       = 32    ,

@@ -1,40 +1,147 @@
 `timescale 1ns / 1ps
 
-
 module top
 #(
-    parameter   NB_DATA     = 6     ,
-    parameter   NB_DISPLAY  = 7
+    parameter NB_DATA                   = 32    ,
+    parameter NB_BYTE                   = 8     ,
+    parameter NB_REG_ADDRESS            = 5     ,
+    parameter NB_MEM_ADDRESS            = 7     ,
+    parameter N_STAGES_TRANSITIONS      = 5     ,
+
+    parameter NB_JUMP_FIELD             = 26    ,
+    parameter NB_OP_FIELD               = 5     ,
+    parameter NB_SIGNALS                = 18
 )
 (
-    output wire                             o_uart_tx_data  ,
-    output wire [NB_DATA        - 1 : 0]    o_data          ,
+    output wire [NB_DATA/2 -1 : 0]  o_leds                  ,
+    output wire                     o_uart_tx               ,
+    output wire                     o_program_loaded        ,
+    output wire                     o_programa_terminado    ,
+    output wire                     o_test                  ,
 
-    input wire                              i_uart_rx_data  ,
-    input wire                              i_switch        ,
-    input wire                              i_reset         ,
-    input wire                              i_clock
+    input  wire                     i_test                  ,
+    input  wire                     i_uart_rx               ,
+    input  wire                     i_reset                 ,
+    input  wire                     i_clock
 );
+
+    wire    [NB_DATA              -1 : 0]   debug_read_reg;
+    wire    [NB_DATA              -1 : 0]   debug_read_mem;
+    wire    [NB_DATA              -1 : 0]   debug_read_pc;
+    wire                                    uart_tx_done;
+    wire                                    clock_1_4;
+
+    wire                                    is_program_end;
+    wire                                    load_program_write_enable;
+    wire                                    pc_reset;
+    wire                                    delete_program;
+    wire                                    uart_enable_send_data;
+
+    wire    [NB_REG_ADDRESS       -1 : 0]   debug_read_reg_address;
+    wire    [NB_MEM_ADDRESS       -1 : 0]   debug_read_mem_address;
+
+    wire    [NB_BYTE              -1 : 0]   load_program_byte;
+    wire    [N_STAGES_TRANSITIONS -1 : 0]   enable_stages_transitions;
+
+    wire    [NB_DATA              -1 : 0]   uart_data_to_send;
+    wire    [NB_BYTE              -1 : 0]   uart_receive_byte;
+    wire                                    uart_receive_byte_done;
+
+    // --------------------------------------------------
+    // Main clock divider 1/4
+    // --------------------------------------------------
+    clock_divider u_clock_div
+    (
+        .o_clock_div            (clock_1_4                          ),
+        .i_reset                (1'b0                               ),
+        .i_clock                (i_clock                            )
+    );
+
+    // --------------------------------------------------
+    // MIPS
+    // --------------------------------------------------
+    mips u_mips
+    (
+        .o_is_end                       (is_program_end             ),
+        .o_debug_read_reg               (debug_read_reg             ),
+        .o_debug_read_mem               (debug_read_mem             ),
+        .o_read_debug_pc                (debug_read_pc              ),
+
+        .i_bootload_wr_en               (load_program_write_enable  ),
+        .i_pc_reset                     (pc_reset                   ),
+        .i_borrar_programa              (delete_program             ),
+        .i_latches_en                   (enable_stages_transitions  ),
+        .i_bootload_byte                (load_program_byte          ),
+        .i_debug_ptr_mem                (debug_read_mem_address     ),
+        .i_debug_ptr_reg                (debug_read_reg_address     ),
+        .i_reset                        (i_reset                    ),
+        .i_clk                          (clock_1_4                  )
+    );
 
     // --------------------------------------------------
     // Debug Unit
     // --------------------------------------------------
     debug_unit u_debug_unit
     (
-        .o_uart_tx_data     (o_uart_tx_data         ),
-        .o_execution_mode   (o_data[3]              ),
-        .o_execution_step   (o_data[4]              ),
-        .o_du_done          (o_data[5]              ),
-        .o_state            (o_data[2:0]            ),
+        // UART communication
+        .i_uart_receive_byte            (uart_receive_byte          ),
+        .i_uart_receive_byte_done       (uart_receive_byte_done     ),
+        .i_uart_tx_done                 (uart_tx_done               ),
+        .o_uart_data_to_send            (uart_data_to_send          ),
+        .o_uart_enable_send_data        (uart_enable_send_data      ),
 
-        .i_uart_rx_data     (i_uart_rx_data         ),
-        .i_halt             (1'b0                   ),
-        .i_pc               (32'hAABBCCDD           ),
-        .i_data_memory      (32'h11223344           ),
-        .i_cycles           (32'h11001100           ),
-        .i_registers        (32'hFFFFFFFF           ),
-        .i_reset            (i_reset                ),
-        .i_clock            (i_clock                )
+        // Stages transitions
+        .o_enable_stages_transitions    (enable_stages_transitions  ),
+
+        // Registers read
+        .i_debug_read_reg               (debug_read_reg             ),
+        .o_debug_read_reg_address       (debug_read_reg_address     ),
+
+        // Memory read
+        .i_debug_read_mem               (debug_read_mem             ),
+        .o_debug_read_mem_address       (debug_read_mem_address     ),
+
+        // PC operations
+        .i_debug_read_pc                (debug_read_pc              ),
+        .o_pc_reset                     (pc_reset                   ),
+
+        // Program operations
+        .o_load_program_byte            (load_program_byte          ),
+        .o_load_program_write_enable    (load_program_write_enable  ),
+        .o_program_loaded               (o_program_loaded           ),
+        .o_delete_program               (delete_program             ),
+        .i_mips_program_ended           (is_program_end             ),
+
+        // Status
+        .o_leds                         (o_leds                     ),
+
+        .i_reset                        (i_reset                    ),
+        .i_clock                        (clock_1_4                  )
     );
+
+    // --------------------------------------------------
+    // UART
+    // --------------------------------------------------
+    uart_32b u_uart
+    (
+        .o_data                         (uart_receive_byte          ),
+        .o_rx_done_pulse                (uart_receive_byte_done     ),
+        .o_tx                           (o_uart_tx                  ),
+        .o_tx_done_8b_pulse             (                           ),
+        .o_tx_done_32b_pulse            (uart_tx_done               ),
+
+        .i_rx                           (i_uart_rx                  ),
+        .i_tx_data                      (uart_data_to_send          ),
+        .i_tx_start_8b                  (1'b0                       ),
+        .i_tx_start_32b                 (uart_enable_send_data      ),
+        .i_reset                        (i_reset                    ),
+        .i_clock                        (clock_1_4                  )
+    );
+
+    // --------------------------------------------------
+    // Output assignments
+    // --------------------------------------------------
+    assign  o_test                  = i_test;
+    assign  o_programa_terminado    = is_program_end;
 
 endmodule

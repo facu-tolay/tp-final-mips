@@ -1,5 +1,5 @@
-final_mips.*
-tp_mips.*
+mips_final_project.*
 vivado*
+*cache*
 *.jou
 *.log
