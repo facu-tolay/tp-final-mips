@@ -20,34 +20,63 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module latch#(
-        parameter BUS_DATA = 8
-    )(
-        input                       i_clock,
-        input                       i_reset,
-        input                       i_enable,
+// module latch#(
+//         parameter BUS_DATA = 8
+//     )(
+//         input                       i_clock,
+//         input                       i_reset,
+//         input                       i_enable,
       
-        input   [BUS_DATA - 1 : 0]  i_data,
-        output  [BUS_DATA - 1 : 0]  o_data     
-    );
+//         input   [BUS_DATA - 1 : 0]  i_data,
+//         output  [BUS_DATA - 1 : 0]  o_data     
+//     );
     
-    reg [BUS_DATA - 1 : 0]  data_reg, data_next;     
+//     reg [BUS_DATA - 1 : 0]  data_reg, data_next;     
     
+//     always @(posedge i_clock)
+//     begin
+//         if (i_reset)   
+//             data_reg <= 0;
+//         else
+//             data_reg <= data_next;      
+//     end
+    
+//     always@(*)
+//     begin
+//         data_next   =  data_reg;
+//         if(i_enable)
+//             data_next   =   i_data;
+//     end
+    
+//     assign o_data = data_reg;
+
+// endmodule
+
+
+
+module latch
+#(
+    parameter BUS_DATA = 8
+)
+(
+    input                       i_clock,
+    input                       i_reset,
+    input                       i_enable,
+    input   [BUS_DATA - 1 : 0]  i_data,
+    output  [BUS_DATA - 1 : 0]  o_data
+);
+
+    reg [BUS_DATA - 1 : 0] data_reg;
+
     always @(posedge i_clock)
     begin
-        if (i_reset)   
+        if (i_reset)
             data_reg <= 0;
-        else
-            data_reg <= data_next;      
+        else if (i_enable)
+            data_reg <= i_data;
     end
-    
-    always@(*)
-    begin
-        data_next   =  data_reg;
-        if(i_enable)
-            data_next   =   i_data;
-    end
-    
+
     assign o_data = data_reg;
 
 endmodule
+

@@ -20,17 +20,39 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module mux#(
-        parameter BITS_ENABLES = 2,
-        parameter BUS_SIZE = 8
-    )(
-        input   [BITS_ENABLES - 1 : 0] i_en,
-        input   [2**BITS_ENABLES*BUS_SIZE - 1 : 0] i_data,
-        output  [BUS_SIZE - 1 : 0] o_data 
-    );
+// module mux#(
+//         parameter BITS_ENABLES = 2,
+//         parameter BUS_SIZE = 8
+//     )(
+//         input   [BITS_ENABLES - 1 : 0] i_en,
+//         input   [2**BITS_ENABLES*BUS_SIZE - 1 : 0] i_data,
+//         output  [BUS_SIZE - 1 : 0] o_data 
+//     );
         
-    //assign o_data = i_data[(BUS_SIZE-1)+BUS_SIZE*i_en-:BUS_SIZE];      
-    assign o_data = i_data>>BUS_SIZE*i_en;      
+//     //assign o_data = i_data[(BUS_SIZE-1)+BUS_SIZE*i_en-:BUS_SIZE];      
+//     assign o_data = i_data>>BUS_SIZE*i_en;      
 
+
+// endmodule
+
+
+
+
+module mux
+#(
+    parameter BITS_ENABLES = 2,
+    parameter BUS_SIZE = 8,
+    parameter NUM_BLOCKS = 2**BITS_ENABLES
+)
+(
+    input   [BITS_ENABLES - 1 : 0] i_en,
+    // input   [2**BITS_ENABLES*BUS_SIZE - 1 : 0] i_data,
+    input   [NUM_BLOCKS*BUS_SIZE - 1 : 0] i_data,
+    output  [BUS_SIZE - 1 : 0] o_data 
+);
+
+    // Seleccionar el bloque correcto directamente utilizando la operación de slicing
+    assign o_data = i_data[i_en * BUS_SIZE +: BUS_SIZE];
 
 endmodule
+

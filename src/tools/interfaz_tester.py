@@ -70,12 +70,10 @@ def test_program(asm_filename, expected_reg_state):
 
     # le da run
     time.sleep(1)
-    # serial_port.write(b'G')
     api_du_run_program(serial_port)
 
     # toma el valor de los registros y compara
     time.sleep(1)
-    # serial_port.write(b'R')
     api_du_read_registers(serial_port)
     time.sleep(2)
     mips_registers_status = serial_receive_thread.get_last_received_words()
@@ -84,13 +82,9 @@ def test_program(asm_filename, expected_reg_state):
     compare_registers(mips_registers_status, expected_reg_state)
 
     # borrar programa y reset PC
-    time.sleep(1)
-    # serial_port.write(b'F')
     api_du_delete_program(serial_port)
-    time.sleep(1)
-    # serial_port.write(b'C')
+    time.sleep(0.5)
     api_du_reset_pc(serial_port)
-
     print("\ntodo borrado, listo para un nuevo run\n")
 
 def compare_registers(current, expected):
@@ -115,15 +109,15 @@ def main_menu():
         print("\t 3. Testear programa ccc.asm")
         print("\t 4. Testear programa ddd.asm")
         print("\t 5. Testear programa eee.asm")
-        # print("\t 6. Testear programa fff.asm")
-        print("\t 6. Testear programa ggg.asm")
+        print("\t 6. Testear programa fff.asm")
+        print("\t 7. Testear programa ggg.asm")
 
         print("\n--- Simulation section ---")
-        print("\t 7. Borrar programa")
-        print("\t 8. Reset PC\n")
-        print("\t 9. Read PC")
-        print("\t 0. Read registers")
-        print("\t A. Read memory\n")
+        print("\t 8. Borrar programa")
+        print("\t 9. Reset PC\n")
+        print("\t 0. Read PC")
+        print("\t R. Read registers")
+        print("\t M. Read memory\n")
         print("\t X. Salir")
         choice = input("Selecciona una opción: ")
 
@@ -167,15 +161,15 @@ def main_menu():
                                   "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000"]
             test_program(program_file, expected_registers)
 
-        # elif (choice == "6"):
-        #     program_file = "./asm_examples/fff.asm"
-        #     expected_registers = ["00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
-        #                           "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
-        #                           "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
-        #                           "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000"]
-        #     test_program(program_file, expected_registers)
-
         elif (choice == "6"):
+            program_file = "./asm_examples/fff.asm"
+            expected_registers = ["00000000", "00000005", "00000019", "00000005", "0000000C", "00000000", "00000000", "00000045",
+                                  "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                                  "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                                  "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000"]
+            test_program(program_file, expected_registers)
+
+        elif (choice == "7"):
             program_file = "./asm_examples/ggg.asm"
             expected_registers = ["00000000", "0000000A", "0000000A", "00000001", "0000000A", "00000000", "00000001", "00000000",
                                   "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
@@ -183,15 +177,15 @@ def main_menu():
                                   "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000"]
             test_program(program_file, expected_registers)
 
-        elif (choice == "7"):
-            api_du_delete_program(serial_port)
         elif (choice == "8"):
-            api_du_reset_pc(serial_port)
+            api_du_delete_program(serial_port)
         elif (choice == "9"):
-            api_du_read_pc(serial_port)
+            api_du_reset_pc(serial_port)
         elif (choice == "0"):
+            api_du_read_pc(serial_port)
+        elif (choice == "R"):
             api_du_read_registers(serial_port)
-        elif (choice == "A"):
+        elif (choice == "M"):
             api_du_read_memory(serial_port)
         elif (choice == "X"):
             print("exiting...")
