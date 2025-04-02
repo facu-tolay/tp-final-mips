@@ -98,16 +98,17 @@ module mips
     // --------------------------------------------------
     // Next PC adder
     // --------------------------------------------------
-    sumador
-    #(
-        .TAM_DATO(NB_DATA)
-    )
-    sum_ip_mas_cuatro
-    (
-        .i_a        (pc_value       ),
-        .i_b        (4              ),
-        .o_result   (pc_suma_result )
-    );
+            assign pc_suma_result = pc_value + $signed(32'h4); // FIXME probar sin signado
+    // sumador
+    // #(
+    //     .TAM_DATO(NB_DATA)
+    // )
+    // sum_ip_mas_cuatro
+    // (
+    //     .i_a        (pc_value       ),
+    //     .i_b        (4              ),
+    //     .o_result   (pc_suma_result )
+    // );
 
     // --------------------------------------------------
     // Instruction Fetch stage
@@ -217,25 +218,22 @@ module mips
     // --------------------------------------------------
     // Sumador IF
     // --------------------------------------------------
-    sumador
-    #(
-        .TAM_DATO(NB_DATA)
-    )
-    sum_if
-    (
-        .i_a        (de_if_a_id[31:0]           ), // FIXME pasar a una expresion wire y assign
-        .i_b        (o_dato_direc_branch<<2     ),
-        .o_result   (immediate_suma_result      )
-    );
+            assign immediate_suma_result = de_if_a_id[31:0] + $signed(o_dato_direc_branch<<2);
+    // sumador
+    // #(
+    //     .TAM_DATO(NB_DATA)
+    // )
+    // sum_if
+    // (
+    //     .i_a        (de_if_a_id[31:0]           ), // FIXME pasar a una expresion wire y assign
+    //     .i_b        (o_dato_direc_branch<<2     ),
+    //     .o_result   (immediate_suma_result      )
+    // );
 
     // --------------------------------------------------
     // Hazard unit
     // --------------------------------------------------
-    hazard_unit
-    #(
-        .REG_SIZE(5)
-    )
-    hazard_unit
+    hazard_unit u_hazard_unit
     (
         .i_jmp_brch         (o_signals[JMP_OR_BRCH]     ),
         .i_brch             (enable_mux_pc_immediate    ),
@@ -245,18 +243,18 @@ module mips
         .i_rt_id_ex         (de_id_a_ex[114 : 110]      ), // FIXME pasar a una expresion wire y assign
         .o_latch_en         (stall_latch                ),
         .o_if_flush         (if_flush                   ),
-        .o_is_risky         (stall_ctl                  )
+        .o_risk_detected    (stall_ctl                  )
     );
 
     // --------------------------------------------------
     // Control unit
     // --------------------------------------------------
     mod_control
-    #(
-        .FUN_SIZE(6),
-        .SIGNALS_SIZE(18)
-    )
-    control_unit
+    // #(
+        // .FUN_SIZE           (6                      )
+        // .SIGNALS_SIZE       (18                     )
+    // )
+    u_control_unit
     (
         .i_function         (de_if_a_id[37 : 32]    ), // FIXME pasar a una expresion wire y assign
         .i_operation        (o_campo_op             ),
@@ -292,7 +290,7 @@ module mips
 
         // Para Debug
         .o_dato_a_debug                 (o_debug_read_reg           ),
-        .i_direc_de_lectura_de_debug    (i_debug_read_reg_address            ),
+        .i_direc_de_lectura_de_debug    (i_debug_read_reg_address   ),
 
         // Para comparar salto
         .o_dato_ra_para_condicion       (o_dato_ra_para_condicion   ),
@@ -331,15 +329,15 @@ module mips
     )
     id_ex_latch
     (
-        .i_clock        (i_clock                    ),
-        .i_reset        (i_reset || i_pc_reset      ),
-        .i_enable       (i_enable_stages_transitions[2]            ),
+        .i_clock        (i_clock                        ),
+        .i_reset        (i_reset || i_pc_reset          ),
+        .i_enable       (i_enable_stages_transitions[2] ),
         .i_data         ({o_direccion_rd, o_direccion_rt,o_dato_inmediato, o_dato_rb,   // FIXME pasar a una expresion wire y assign
                           o_dato_ra, o_signals[REG_DST], o_signals[ALU_SRC], o_signals[OP2:OP0],
                           o_signals[SHIFT_SRC], o_signals[DATA_MASK_1:DATA_MASK_0],
                           o_signals[MEM_WRITE], o_signals[MEM_READ]  , o_signals[IS_UNSIGNED],
                           o_signals[REG_WRITE], o_signals[MEM_TO_REG], o_signals[J_RETURN_DST]}),
-        .o_data         (de_id_a_ex                 )
+        .o_data         (de_id_a_ex                     )
     );
 
     // --------------------------------------------------
