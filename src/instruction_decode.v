@@ -1,149 +1,164 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 12.12.2022 20:06:31
-// Design Name: 
-// Module Name: instruction_decode
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
-module instruction_decode#(
-        parameter   TAM_DATA                =   32,
-        parameter   TAM_CAMPO_JUMP          =   26,
-        parameter   TAM_CAMPO_OP            =   6,
-        parameter   TAM_DIREC_REG           =   5,
-        parameter   TAM_CORTOCIRC_ENABLES   =   2      
-    )(
-    input                               i_clk,
-    input                               i_reset,
+module instruction_decode
+#(
+    parameter NB_DATA               = 32    ,
+    parameter NB_REG_ADDRESS        = 5     ,
+    parameter NB_JUMP_ADDRESS       = 26    ,
+    parameter NB_OP_FIELD           = 6     ,
+    parameter NB_FORWARDING_ENABLE  = 2
+)
+(
     //Intruccion
-    input   [TAM_DATA - 1 : 0]          i_instruccion,
+    input   [NB_DATA        -1 : 0] i_instruccion                   ,
+
     // Cortocircuito
-    input                               i_reg_write_id_ex,
-    input                               i_reg_write_ex_mem,
-    input                               i_reg_write_mem_wb,
-    input   [TAM_DIREC_REG - 1 : 0]     i_direc_rd_id_ex, 
-    input   [TAM_DIREC_REG - 1 : 0]     i_direc_rd_ex_mem,     
-    input   [TAM_DIREC_REG - 1 : 0]     i_direc_rd_mem_wb,     
-    input   [TAM_DATA - 1 : 0]          i_dato_de_id_ex, 
-    input   [TAM_DATA - 1 : 0]          i_dato_de_ex_mem, 
-    input   [TAM_DATA - 1 : 0]          i_dato_de_mem_wb, 
+    input                           i_reg_write_id_ex               ,
+    input                           i_reg_write_ex_mem              ,
+    input                           i_reg_write_mem_wb              ,
+    input   [NB_REG_ADDRESS -1 : 0] i_direc_rd_id_ex                ,
+    input   [NB_REG_ADDRESS -1 : 0] i_direc_rd_ex_mem               ,
+    input   [NB_REG_ADDRESS -1 : 0] i_direc_rd_mem_wb               ,
+    input   [NB_DATA        -1 : 0] i_dato_de_id_ex                 ,
+    input   [NB_DATA        -1 : 0] i_dato_de_ex_mem                ,
+    input   [NB_DATA        -1 : 0] i_dato_de_mem_wb                ,
+
     //Al registro
-    input   [TAM_DATA - 1 : 0]          i_dato_de_escritura_en_reg,
-    input   [TAM_DIREC_REG - 1 : 0]     i_direc_de_escritura_en_reg,
+    input   [NB_DATA        -1 : 0] i_dato_de_escritura_en_reg      ,
+    input   [NB_REG_ADDRESS -1 : 0] i_direc_de_escritura_en_reg     ,
+
     // Para Debug
-    output  [TAM_DATA - 1 : 0]          o_dato_a_debug,
-    input   [TAM_DIREC_REG - 1 : 0]     i_direc_de_lectura_de_debug,
+    output  [NB_DATA        -1 : 0] o_dato_a_debug                  ,
+    input   [NB_REG_ADDRESS -1 : 0] i_direc_de_lectura_de_debug     ,
+
     // Para comparar salto
-    output  [TAM_DATA - 1 : 0]          o_dato_ra_para_condicion,
-    output  [TAM_DATA - 1 : 0]          o_dato_rb_para_condicion,
+    output  [NB_DATA        -1 : 0] o_dato_ra_para_condicion        ,
+    output  [NB_DATA        -1 : 0] o_dato_rb_para_condicion        ,
+
     //Para Branch
-    output  [TAM_DATA - 1 : 0]          o_dato_direc_branch,
+    output  [NB_DATA        -1 : 0] o_dato_direc_branch             ,
+
     //Para Jump
-    output  [TAM_CAMPO_JUMP - 1 : 0]    o_dato_direc_jump,
+    output  [NB_JUMP_ADDRESS-1 : 0] o_dato_direc_jump               ,
+
     // Para direccion de retorno
-    input   [TAM_DATA - 1 : 0]          i_dato_nuevo_pc,
+    input   [NB_DATA        -1 : 0] i_dato_nuevo_pc                 ,
+
     //Datos
-    output  [TAM_DATA - 1 : 0]          o_dato_ra,
-    output  [TAM_DATA - 1 : 0]          o_dato_rb,
-    output  [TAM_DATA - 1 : 0]          o_dato_inmediato,
+    output  [NB_DATA        -1 : 0] o_dato_ra                       ,
+    output  [NB_DATA        -1 : 0] o_dato_rb                       ,
+    output  [NB_DATA        -1 : 0] o_dato_inmediato                ,
     
-    output  [TAM_DIREC_REG - 1 : 0]     o_direccion_rs,
-    output  [TAM_DIREC_REG - 1 : 0]     o_direccion_rt,
-    output  [TAM_DIREC_REG - 1 : 0]     o_direccion_rd,
+    output  [NB_REG_ADDRESS -1 : 0] o_direccion_rs                  ,
+    output  [NB_REG_ADDRESS -1 : 0] o_direccion_rt                  ,
+    output  [NB_REG_ADDRESS -1 : 0] o_direccion_rd                  ,
+
     // A control
-    output  [TAM_CAMPO_OP - 1 : 0]      o_campo_op,
+    output  [NB_OP_FIELD    -1 : 0] o_campo_op                      ,
+
     // Flags de control
-    input                               i_jump_o_branch
-    );
-    wire  [TAM_DATA - 1 : 0]                       salida_de_forwarding_dato_a;
-    wire  [TAM_DATA - 1 : 0]                       salida_del_ra;
-    wire  [TAM_DATA - 1 : 0]                       salida_del_rb;
+    input                           i_jump_o_branch                 ,
 
-    wire  [TAM_CORTOCIRC_ENABLES - 1 : 0]          bits_de_forward_a;
-    wire  [TAM_CORTOCIRC_ENABLES - 1 : 0]          bits_de_forward_b;
+    input                           i_reset                         ,
+    input                           i_clock
+);
 
+    wire  [NB_DATA              -1 : 0] salida_de_forwarding_dato_a;
+    wire  [NB_DATA              -1 : 0] salida_del_ra;
+    wire  [NB_DATA              -1 : 0] salida_del_rb;
+    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_a;
+    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_b;
 
-    mux #(
-        .BITS_ENABLES(1),
-        .BUS_SIZE(TAM_DATA)
-    )mux_de_dato_o_pc(
-        i_jump_o_branch,
-        {i_dato_nuevo_pc,salida_de_forwarding_dato_a},
-        o_dato_ra
-    ); 
-    
-     mux #(
-        .BITS_ENABLES(2),
-        .BUS_SIZE(TAM_DATA)
-    )mux_de_forward_para_dato_a(
-        bits_de_forward_a,
-        {i_dato_de_id_ex,i_dato_de_mem_wb ,i_dato_de_ex_mem,salida_del_ra },
-        salida_de_forwarding_dato_a
+    mux
+    #(
+        .BITS_ENABLES       (1                      ),
+        .BUS_SIZE           (NB_DATA                )
+    )
+    u_mux_de_dato_o_pc
+    (
+        .i_en               (i_jump_o_branch                                                        ),
+        .i_data             ({i_dato_nuevo_pc,salida_de_forwarding_dato_a}                          ),
+        .o_data             (o_dato_ra                                                              )
     );
-    
-    mux #(
-        .BITS_ENABLES(2),
-        .BUS_SIZE(TAM_DATA)
-    )mux_de_forward_para_dato_b(
-        bits_de_forward_b,
-        {i_dato_de_id_ex,i_dato_de_mem_wb,i_dato_de_ex_mem,salida_del_rb },
-        o_dato_rb
-    );
-    
-    forwarding_unit cortocircuito(
-        i_instruccion[25:21],
-        i_instruccion[20:16],
-        i_direc_rd_id_ex,
-        i_direc_rd_ex_mem,
-        i_direc_rd_mem_wb,    
-        i_reg_write_ex_mem,
-        i_reg_write_id_ex,
-        i_reg_write_mem_wb,
-        bits_de_forward_a,
-        bits_de_forward_b
-    );
-    register_file registros(
-        i_clk,
-        i_reset,
-        i_reg_write_mem_wb,
-        i_dato_de_escritura_en_reg,
-        i_direc_de_escritura_en_reg,
-        i_instruccion[25:21],
-        i_instruccion[20:16],
 
-        i_direc_de_lectura_de_debug,
-        o_dato_a_debug,
+     mux
+     #(
+        .BITS_ENABLES       (NB_FORWARDING_ENABLE   ),
+        .BUS_SIZE           (NB_DATA                )
+    )
+    u_mux_de_forward_para_dato_a
+     (
+        .i_en               (bits_de_forward_a                                                      ),
+        .i_data             ({i_dato_de_id_ex,i_dato_de_mem_wb ,i_dato_de_ex_mem,salida_del_ra }    ),
+        .o_data             (salida_de_forwarding_dato_a                                            )
+    );
 
-        salida_del_ra,
-        salida_del_rb
+    mux
+    #(
+        .BITS_ENABLES       (NB_FORWARDING_ENABLE   ),
+        .BUS_SIZE           (NB_DATA                )
+    )
+    u_mux_de_forward_para_dato_b
+    (
+        .i_en               (bits_de_forward_b                                                      ),
+        .i_data             ({i_dato_de_id_ex,i_dato_de_mem_wb,i_dato_de_ex_mem,salida_del_rb }     ),
+        .o_data             (o_dato_rb                                                              )
     );
-    
-    sing_extender extensor_de_signo
-        (i_instruccion[15:0],
-         o_dato_inmediato
+
+    // --------------------------------------------------
+    // Forwarding unit
+    // --------------------------------------------------
+    forwarding_unit u_forwarding_unit
+    (
+        .i_rs_if_id             (i_instruccion[25:21]           ),
+        .i_rt_if_id             (i_instruccion[20:16]           ),
+        .i_rd_id_ex             (i_direc_rd_id_ex               ),
+        .i_rd_ex_mem            (i_direc_rd_ex_mem              ),
+        .i_rd_mem_wb            (i_direc_rd_mem_wb              ),
+        .i_reg_wr_ex_mem        (i_reg_write_ex_mem             ),
+        .i_reg_wr_id_ex         (i_reg_write_id_ex              ),
+        .i_reg_wr_mem_wb        (i_reg_write_mem_wb             ),
+        .o_forward_a            (bits_de_forward_a              ),
+        .o_forward_b            (bits_de_forward_b              )
     );
-    
-    assign  o_campo_op                  =   i_instruccion[31:26];
-    assign  o_dato_direc_branch         =   o_dato_inmediato;  
-    assign  o_dato_direc_jump           =   i_instruccion[25:0];
-    assign  o_dato_ra_para_condicion    =   salida_de_forwarding_dato_a;  
-    assign  o_dato_rb_para_condicion    =   o_dato_rb;
-    assign  o_direccion_rd              =   i_instruccion[15:11]; 
-    assign  o_direccion_rs              =   i_instruccion[25:21]; 
-    assign  o_direccion_rt              =   i_instruccion[20:16]; 
+
+    // --------------------------------------------------
+    // Registers
+    // --------------------------------------------------
+    register_file u_registers
+    (
+        .i_clk                  (i_clock                        ),
+        .i_reset                (i_reset                        ),
+        .i_write_enable         (i_reg_write_mem_wb             ),
+        .i_data                 (i_dato_de_escritura_en_reg     ),
+        .i_write_direc          (i_direc_de_escritura_en_reg    ),
+        .i_read_direc_A         (i_instruccion[25:21]           ),
+        .i_read_direc_B         (i_instruccion[20:16]           ),
+        .i_read_direc_debug     (i_direc_de_lectura_de_debug    ),
+        .o_data_debug           (o_dato_a_debug                 ),
+        .o_data_A               (salida_del_ra                  ),
+        .o_data_B               (salida_del_rb                  )
+    );
+
+    // --------------------------------------------------
+    // Sign extender
+    // --------------------------------------------------
+    sign_extender u_sign_extender
+    (
+        .data_in                (i_instruccion[15:0]            ),
+        .data_out               (o_dato_inmediato               )
+    );
+
+    // --------------------------------------------------
+    // Output assignments
+    // --------------------------------------------------
+    assign  o_campo_op               = i_instruccion[31:26];
+    assign  o_dato_direc_branch      = o_dato_inmediato;
+    assign  o_dato_direc_jump        = i_instruccion[25:0];
+    assign  o_dato_ra_para_condicion = salida_de_forwarding_dato_a;
+    assign  o_dato_rb_para_condicion = o_dato_rb;
+    assign  o_direccion_rd           = i_instruccion[15:11];
+    assign  o_direccion_rs           = i_instruccion[25:21];
+    assign  o_direccion_rt           = i_instruccion[20:16];
 
 endmodule

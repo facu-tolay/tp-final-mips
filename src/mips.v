@@ -94,21 +94,10 @@ module mips
     wire    [NB_REG_ADDRESS-1:0]        direccion_de_wb;
 
 
-    /*====================================== Sumador PC         =============================*/
     // --------------------------------------------------
     // Next PC adder
     // --------------------------------------------------
-            assign pc_suma_result = pc_value + $signed(32'h4); // FIXME probar sin signado
-    // sumador
-    // #(
-    //     .TAM_DATO(NB_DATA)
-    // )
-    // sum_ip_mas_cuatro
-    // (
-    //     .i_a        (pc_value       ),
-    //     .i_b        (4              ),
-    //     .o_result   (pc_suma_result )
-    // );
+    assign pc_suma_result = pc_value + $signed(32'h4); // FIXME probar sin signado
 
     // --------------------------------------------------
     // Instruction Fetch stage
@@ -218,17 +207,7 @@ module mips
     // --------------------------------------------------
     // Sumador IF
     // --------------------------------------------------
-            assign immediate_suma_result = de_if_a_id[31:0] + $signed(o_dato_direc_branch<<2);
-    // sumador
-    // #(
-    //     .TAM_DATO(NB_DATA)
-    // )
-    // sum_if
-    // (
-    //     .i_a        (de_if_a_id[31:0]           ), // FIXME pasar a una expresion wire y assign
-    //     .i_b        (o_dato_direc_branch<<2     ),
-    //     .o_result   (immediate_suma_result      )
-    // );
+    assign immediate_suma_result = de_if_a_id[31:0] + $signed(o_dato_direc_branch<<2);
 
     // --------------------------------------------------
     // Hazard unit
@@ -249,12 +228,7 @@ module mips
     // --------------------------------------------------
     // Control unit
     // --------------------------------------------------
-    mod_control
-    // #(
-        // .FUN_SIZE           (6                      )
-        // .SIGNALS_SIZE       (18                     )
-    // )
-    u_control_unit
+    mod_control u_control_unit
     (
         .i_function         (de_if_a_id[37 : 32]    ), // FIXME pasar a una expresion wire y assign
         .i_operation        (o_campo_op             ),
@@ -267,7 +241,7 @@ module mips
     // --------------------------------------------------
     instruction_decode ID
     (
-        .i_clk                          (i_clock                    ),
+        .i_clock                        (i_clock                    ),
         .i_reset                        (i_reset || i_pc_reset      ),
 
         // Intruccion
@@ -412,7 +386,7 @@ module mips
     // --------------------------------------------------
     // Write-back stage
     // --------------------------------------------------
-    write_back WB
+    write_back u_write_back
     (
         .i_dato_de_mem      (de_mem_a_wb[33:2]  ), // FIXME pasar a una expresion wire y assign
 

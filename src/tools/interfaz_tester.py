@@ -50,7 +50,6 @@ def enviar_programa_process(asm_filename):
     finally:
         out_file.close()
 
-    # serial_port.write(b'B')
     api_du_enable_load_program(serial_port)
     with open("output_code.hex", "rb") as f:
         while True:
