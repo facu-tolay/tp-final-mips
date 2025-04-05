@@ -6,8 +6,8 @@ module debug_unit
     parameter NB_MEM_ADDRESS            = 7     ,
     parameter NB_STATE                  = 4     ,
     parameter N_STAGES_TRANSITIONS      = 5     ,
-    parameter N_REGISTERS               = 32    , // N registros de 32 bits
-    parameter N_MEMORY_BYTES            = 128     // N bytes de memoria separados en 32 bits
+    parameter N_REGISTERS               = 32    ,
+    parameter N_MEMORY_BYTES            = 128 // N bytes de memoria separados en 32 bits
 )
 (
     // UART communication
@@ -161,7 +161,7 @@ module debug_unit
     end
 
     // --------------------------------------------------
-    // Main FSM logic
+    // Main FSM next state logic
     // --------------------------------------------------
     always @(*) begin
         state_next                     = state;

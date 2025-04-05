@@ -317,7 +317,7 @@ module mips
     // --------------------------------------------------
     // Execution stage
     // --------------------------------------------------
-    execution EX
+    execution u_execution_stage
     (
         .i_shift_src            (de_id_a_ex[8]          ), // FIXME pasar a una expresion wire y assign
         .i_reg_dst              (de_id_a_ex[13]         ), // FIXME pasar a una expresion wire y assign
