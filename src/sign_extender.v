@@ -12,6 +12,9 @@ module sign_extender
 
     wire is_number_negative;
 
+    // --------------------------------------------------
+    // Output logic
+    // --------------------------------------------------
     assign is_number_negative = data_in[NB_WORD-1] == 1;
     assign data_out           = is_number_negative ? {16'b1111111111111111, data_in} : {16'b0000000000000000, data_in};
 

@@ -125,19 +125,20 @@ module instruction_decode
     // --------------------------------------------------
     // Registers
     // --------------------------------------------------
-    register_file u_registers
+    registers u_registers
     (
-        .i_clk                  (i_clock                        ),
-        .i_reset                (i_reset                        ),
-        .i_write_enable         (i_reg_write_mem_wb             ),
-        .i_data                 (i_dato_de_escritura_en_reg     ),
-        .i_write_direc          (i_direc_de_escritura_en_reg    ),
-        .i_read_direc_A         (i_instruccion[25:21]           ),
-        .i_read_direc_B         (i_instruccion[20:16]           ),
-        .i_read_direc_debug     (i_direc_de_lectura_de_debug    ),
-        .o_data_debug           (o_dato_a_debug                 ),
-        .o_data_A               (salida_del_ra                  ),
-        .o_data_B               (salida_del_rb                  )
+        .o_read_reg_data_a          (salida_del_ra                  ),
+        .o_read_reg_data_b          (salida_del_rb                  ),
+        .o_read_reg_data_debug      (o_dato_a_debug                 ),
+
+        .i_read_reg_address_a       (i_instruccion[25:21]           ),
+        .i_read_reg_address_b       (i_instruccion[20:16]           ),
+        .i_write_reg_data           (i_dato_de_escritura_en_reg     ),
+        .i_write_reg_address        (i_direc_de_escritura_en_reg    ),
+        .i_write_reg_enable         (i_reg_write_mem_wb             ),
+        .i_read_reg_address_debug   (i_direc_de_lectura_de_debug    ),
+        .i_reset                    (i_reset                        ),
+        .i_clock                    (i_clock                        )
     );
 
     // --------------------------------------------------
