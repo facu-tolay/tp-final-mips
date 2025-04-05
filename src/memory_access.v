@@ -25,16 +25,24 @@ module memory_access
     wire [TAM_DATA  -1 : 0] dato_de_memoria_a_signador;
     wire [TAM_DATA  -1 : 0] dato_signado;
 
-    // FIXME este bloque vuela
-    mask_a_byte mask
-    (
-        i_data_mask,
-        bits_de_mascara_a_memoria
-    );
+    // --------------------------------------------------
+    // Masking for bytes in memory
+    // --------------------------------------------------
+    assign bits_de_mascara_a_memoria[3 : 2] = {i_data_mask[1], i_data_mask[1]};
+    assign bits_de_mascara_a_memoria[1    ] = i_data_mask[0];
+    assign bits_de_mascara_a_memoria[0    ] = 1'b1;
+    // mask_a_byte mask
+    // (
+        // .i_mascara          (i_data_mask                    ),
+        // .o_enables          (bits_de_mascara_a_memoria      )
+    // );
 
-    memoria_por_byte memoria
+    // --------------------------------------------------
+    // Data memory
+    // --------------------------------------------------
+    memoria_por_byte u_data_memory
     (
-        .i_clk              (i_clk                          ),
+        .i_clock            (i_clk                          ),
         .i_reset            (i_reset                        ),
         .i_write_enable     (i_wr_mem                       ),
         .i_byte_enb         (bits_de_mascara_a_memoria      ), //es una entrada, indicamos que bytes queremos
@@ -45,7 +53,10 @@ module memory_access
         .o_data             (dato_de_memoria_a_signador     )
     );
 
-    signador signador
+    // --------------------------------------------------
+    // Signator
+    // --------------------------------------------------
+    signator u_signator
     (
         .i_is_unsigned      (i_is_unsigned                  ),
         .i_mascara          (i_data_mask                    ),
@@ -53,7 +64,10 @@ module memory_access
         .o_dato             (dato_signado                   )
     );
 
-    mux 
+    // --------------------------------------------------
+    // Write data to register selection
+    // --------------------------------------------------
+    mux
     #(
         .BITS_ENABLES       (1                              ),
         .BUS_SIZE           (TAM_DATA                       )
