@@ -21,13 +21,3 @@ def api_du_delete_program(du_serial_port):
 
 def api_du_reset_pc(du_serial_port):
     du_serial_port.write(b'C')
-
-
-# // RUN_COMMAND          = "E";
-# // NEXT_COMMAND         = "N";
-# // BOOTLOADER_COMMAND   = "L";
-# // READ_REG_COMMAND     = "R";
-# // READ_MEM_COMMAND     = "M";
-# // READ_PC_COMMAND      = "P";
-# // FLUSH_PROG_COMMAND   = "D";
-# // RESET_PC_COMMAND     = "C";

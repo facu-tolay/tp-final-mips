@@ -31,11 +31,6 @@ module memory_access
     assign bits_de_mascara_a_memoria[3 : 2] = {i_data_mask[1], i_data_mask[1]};
     assign bits_de_mascara_a_memoria[1    ] = i_data_mask[0];
     assign bits_de_mascara_a_memoria[0    ] = 1'b1;
-    // mask_a_byte mask
-    // (
-        // .i_mascara          (i_data_mask                    ),
-        // .o_enables          (bits_de_mascara_a_memoria      )
-    // );
 
     // --------------------------------------------------
     // Data memory

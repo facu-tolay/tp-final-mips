@@ -9,17 +9,6 @@ from api_debug_unit import *
 serial_port = None
 serial_receive_thread = None
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 def enviar_programa_process(asm_filename):
     global serial_port
 
@@ -59,9 +48,11 @@ def enviar_programa_process(asm_filename):
 
     print(f'\nsent all instructions !')
 
-def test_program(asm_filename, expected_reg_state):
+def test_program(asm_filename, expected_reg_state, expected_mem_state):
     global serial_port
     global serial_receive_thread
+
+    test_result = True
 
     # toma el archivo, lo compila y lo envia al mips
     enviar_programa_process(asm_filename)
@@ -69,15 +60,25 @@ def test_program(asm_filename, expected_reg_state):
     # le da run
     time.sleep(0.5)
     api_du_run_program(serial_port)
-
-    # toma el valor de los registros y compara
     time.sleep(1)
-    api_du_read_registers(serial_port)
-    time.sleep(2)
-    mips_registers_status = serial_receive_thread.get_last_received_words()
-    print(f'registros del MIPS despues de ejecutar:\n{mips_registers_status}\n')
 
-    test_result = compare_registers(mips_registers_status, expected_reg_state)
+    if(expected_reg_state != None and len(expected_reg_state) > 0):
+        print(f'checking registers ...')
+        api_du_read_registers(serial_port)
+        time.sleep(2)
+        mips_registers_status = serial_receive_thread.get_last_received_words()
+        print(f'registros del MIPS despues de ejecutar:\n{mips_registers_status}\n')
+        test_result = test_result and compare_registers(mips_registers_status, expected_reg_state)
+
+    if(expected_mem_state != None and len(expected_mem_state) > 0):
+        print(f'checking memory ...')
+        api_du_read_memory(serial_port)
+        time.sleep(2)
+        mips_memory_status = serial_receive_thread.get_last_received_words()
+        print(f'memoria del MIPS despues de ejecutar:\n{mips_memory_status}\n')
+        test_result = test_result and compare_registers(mips_memory_status, expected_mem_state)
+
+    print(f"\ntest pass ? {bcolors.OKGREEN if test_result==True else bcolors.FAIL} {test_result} {bcolors.ENDC}")
 
     # borrar programa y reset PC
     api_du_delete_program(serial_port)
@@ -147,10 +148,21 @@ class rx_thread(threading.Thread):
                     words_32b.append(word_32b_hex)
 
                 self.__last_received_words = words_32b
-                print(f'\n\n[THREAD] received data: {len(received)} bytes \n{words_32b}\n')
+                print(f'\n[THREAD] received data: {len(received)} bytes \n{words_32b}\n')
 
     def get_last_received_words(self):
         return self.__last_received_words
 
 def manage_exception(e):
     logging.error(f'[{__name__}] Exception raised: {repr(e)} | {type(e).__name__}\n@ {__file__}, line {e.__traceback__.tb_lineno}\n')
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'

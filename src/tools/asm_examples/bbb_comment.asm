@@ -35,3 +35,11 @@ HALT                  # Detiene la ejecución del programa
 # R8       | 5                     | 0x05
 # R9       | 30                    | 0x1E
 # R10      | 25                    | 0x19
+
+# Estado final de la memoria:
+# .------------------------------------------------------------.
+# | Dirección de Memoria | Valor almacenado (hexadecimal)      |
+# |----------------------|-------------------------------------|
+# | 0x00000064           | 0x0A (byte)                         |
+# | 0x00000066           | 0x0014 (halfword)                   |
+# | 0x00000068           | 0x00000005 (word)                   |
