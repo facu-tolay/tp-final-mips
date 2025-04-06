@@ -30,7 +30,7 @@ module instruction_fetch
         .i_enable   (i_stall                ),
         .i_data     (i_new_pc               ),
         .o_data     (pc_value               ),
-        .i_reset    ((i_reset || i_pc_reset)),
+        .i_reset    (i_reset || i_pc_reset  ),
         .i_clock    (i_clk                  )
     );
 

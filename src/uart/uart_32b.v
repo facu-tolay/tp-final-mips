@@ -5,7 +5,7 @@ module uart_32b
     parameter   NB_DATA         = 32                ,
     parameter   NB_BYTE         = 8                 ,
     parameter   BAUD_RATE       = 9600              ,
-    parameter   CLOCK_FREQ_HZ   = 25000000
+    parameter   CLOCK_FREQ_HZ   = 50000000
 )
 (
     output wire                     o_tx                ,

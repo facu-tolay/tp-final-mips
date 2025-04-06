@@ -3,6 +3,7 @@
 module instruction_decode
 #(
     parameter NB_DATA               = 32    ,
+    parameter NB_WORD               = 16    ,
     parameter NB_REG_ADDRESS        = 5     ,
     parameter NB_JUMP_ADDRESS       = 26    ,
     parameter NB_OP_FIELD           = 6     ,
@@ -142,19 +143,23 @@ module instruction_decode
     );
 
     // --------------------------------------------------
-    // Sign extender
+    // Sign extension
     // --------------------------------------------------
-    sign_extender u_sign_extender
-    (
-        .data_in                (i_instruccion[15:0]            ),
-        .data_out               (o_dato_inmediato               )
-    );
+    // FIXME este bloque vuela
+    // sign_extender u_sign_extender
+    // (
+    //     .data_in                (i_instruccion[15:0]            ),
+    //     .data_out               (o_dato_inmediato               )
+    // );
+    wire is_number_negative;
+    assign is_number_negative = i_instruccion[NB_WORD-1] == 1;
+    assign o_dato_inmediato   = is_number_negative ? {16'b1111111111111111, i_instruccion[15:0]} : {16'b0000000000000000, i_instruccion[15:0]};
 
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
     assign  o_campo_op               = i_instruccion[31:26];
-    assign  o_dato_direc_branch      = o_dato_inmediato;
+    assign  o_dato_direc_branch      = o_dato_inmediato; // FIXME esto wtf ?? esta duplicada la salida
     assign  o_dato_direc_jump        = i_instruccion[25:0];
     assign  o_dato_ra_para_condicion = salida_de_forwarding_dato_a;
     assign  o_dato_rb_para_condicion = o_dato_rb;
