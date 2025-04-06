@@ -6,11 +6,7 @@ module top
     parameter NB_BYTE                   = 8     ,
     parameter NB_REG_ADDRESS            = 5     ,
     parameter NB_MEM_ADDRESS            = 7     ,
-    parameter N_STAGES_TRANSITIONS      = 5     ,
-
-    parameter NB_JUMP_FIELD             = 26    ,
-    parameter NB_OP_FIELD               = 5     ,
-    parameter NB_SIGNALS                = 18
+    parameter N_STAGES_TRANSITIONS      = 5
 )
 (
     output wire [NB_DATA/2 -1 : 0]  o_leds                  ,
@@ -52,9 +48,9 @@ module top
     // --------------------------------------------------
     clock_divider u_clock_div
     (
-        .o_clock_div            (clock_1_4                          ),
-        .i_reset                (1'b0                               ),
-        .i_clock                (i_clock                            )
+        .o_clock_div                    (clock_1_4                  ),
+        .i_reset                        (1'b0                       ),
+        .i_clock                        (i_clock                    )
     );
 
     // --------------------------------------------------
@@ -62,20 +58,20 @@ module top
     // --------------------------------------------------
     mips u_mips
     (
-        .o_is_end                       (is_program_end             ),
         .o_debug_read_reg               (debug_read_reg             ),
         .o_debug_read_mem               (debug_read_mem             ),
-        .o_read_debug_pc                (debug_read_pc              ),
+        .o_debug_read_pc                (debug_read_pc              ),
+        .o_is_program_end               (is_program_end             ),
 
-        .i_bootload_wr_en               (load_program_write_enable  ),
+        .i_debug_read_reg_address       (debug_read_reg_address     ),
+        .i_debug_read_mem_address       (debug_read_mem_address     ),
+        .i_enable_stages_transitions    (enable_stages_transitions  ),
+        .i_load_program_byte            (load_program_byte          ),
+        .i_load_program_write_enable    (load_program_write_enable  ),
         .i_pc_reset                     (pc_reset                   ),
-        .i_borrar_programa              (delete_program             ),
-        .i_latches_en                   (enable_stages_transitions  ),
-        .i_bootload_byte                (load_program_byte          ),
-        .i_debug_ptr_mem                (debug_read_mem_address     ),
-        .i_debug_ptr_reg                (debug_read_reg_address     ),
+        .i_delete_program               (delete_program             ),
         .i_reset                        (i_reset                    ),
-        .i_clk                          (clock_1_4                  )
+        .i_clock                        (clock_1_4                  )
     );
 
     // --------------------------------------------------

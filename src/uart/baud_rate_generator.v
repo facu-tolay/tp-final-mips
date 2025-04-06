@@ -4,7 +4,7 @@ module baud_rate_generator
 #(
     parameter   DATA_BITS   = 10        ,
     parameter   BAUD_RATE   = 9600      ,
-    parameter   CLOCK_RATE  = 25000000
+    parameter   CLOCK_RATE  = 50000000
 )
 (
     input wire              i_clock     ,

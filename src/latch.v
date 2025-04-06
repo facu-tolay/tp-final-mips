@@ -1,53 +1,29 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 29.09.2022 00:55:44
-// Design Name: 
-// Module Name: latch
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
+module latch
+#(
+    parameter BUS_DATA = 8
+)
+(
+    output  [BUS_DATA - 1 : 0]  o_data      ,
 
-module latch#(
-        parameter BUS_DATA = 8
-    )(
-        input                       i_clock,
-        input                       i_reset,
-        input                       i_enable,
-      
-        input   [BUS_DATA - 1 : 0]  i_data,
-        output  [BUS_DATA - 1 : 0]  o_data     
-    );
-    
-    reg [BUS_DATA - 1 : 0]  data_reg, data_next;     
-    
-    always @(posedge i_clock)
-    begin
-        if (i_reset)   
-            data_reg <= 0;
-        else
-            data_reg <= data_next;      
+    input   [BUS_DATA - 1 : 0]  i_data      ,
+    input                       i_enable    , // FIXME cambiar a i_valid
+    input                       i_reset     ,
+    input                       i_clock
+);
+
+    reg [BUS_DATA - 1 : 0] data_d;
+
+    always @(posedge i_clock) begin
+        if (i_reset) begin
+            data_d <= 0;
+        end
+        else if (i_enable) begin
+            data_d <= i_data;
+        end
     end
-    
-    always@(*)
-    begin
-        data_next   =  data_reg;
-        if(i_enable)
-            data_next   =   i_data;
-    end
-    
-    assign o_data = data_reg;
+
+    assign o_data = data_d;
 
 endmodule

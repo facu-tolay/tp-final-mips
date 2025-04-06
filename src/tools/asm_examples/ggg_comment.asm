@@ -1,28 +1,35 @@
 # Inicialización de valores
-ADDI R1, R0, 0       # R1 = 0 (contador)
-ADDI R2, R0, 10      # R2 = N (número de iteraciones, por ejemplo 10)
-ADDI R3, R0, 1       # R3 = 1 (incremento en cada iteración)
-ADDI R4, R0, 0       # R4 = 0 (acumulador)
+ADDI R1, R0, 5        # R1 = N (límite superior, en este caso 5)
+ADDI R2, R0, 0        # R2 = 0 (acumulador para la suma)
+ADDI R3, R0, 1        # R3 = 1 (contador para iterar desde 1 hasta N)
+ADDI R4, R0, 60       # R4 = Dirección de salto dinámico (por ejemplo, línea 26) - Expresada en bytes
+ADDI R31, R0, 0       # R31 = 0 (se usará para guardar direcciones de retorno)
 
-# Bucle
-SLT  R5, R1, R2      # Si R1 < R2, R5 = 1. Si no, R5 = 0.
-BEQ  R5, R0, 4       # Si R5 == 0 (R1 >= R2), salta hacia el halt
-ADDU R4, R4, R3      # Incrementar acumulador R4
-SLTI R6, R4, 15      # Si R4 < 15, R6 = 1. Si no, R6 = 0.
-ADDI R1, R1, 1       # Incrementar contador R1
-J    4               # Salta nuevamente al inicio del bucle (Loop)
+# Inicio del bucle principal
+SLT  R5, R3, R1       # Comprueba si R5 = R3 < R1 (contador < límite?)
+BEQ  R5, R0, 2        # Si R3 >= R1, salta a las operaciones extra
 
-# Final del programa
-HALT                 # Detener ejecución
+# Incrementar el contador para la siguiente iteración
+ADDI R3, R3, 1        # Incrementa R3 (contador)
+J    5                # Salta de vuelta al inicio del bucle principal
 
+# Operaciones extra
+ADDU R2, R2, R3       # Acumula el valor de R3 en R2 (R2 += R3)
+JAL 17                # Guarda dirección de retorno en R31 y salta a la subrutina B
+ADDI R7, R0, 69       # Se setea el valor de R7
+ADDI R2, R2, 10       # Incrementa a R2 en 10
 
+# JALR rd, rs         # salta incondicionalmente a la instrucción cuya dirección se encuentra en el registro rs. Salva la dirección de la siguiente instrucción en el registro $rd
+JALR R20, R4          # Salta a la direccion apuntada por R4 (=15) y guarda la dir de retorno en R20
+J    19               # Goto HALT
 
-# Estado final esperado:
-# Registro  | Valor final (decimal) | Valor final (hexadecimal)
-# ----------|-----------------------|--------------------------------
-# R1        | 10                    | 0x0A (número de iteraciones, N)
-# R2        | 10                    | 0x0A
-# R3        | 1                     | 0x01
-# R4        | 10                    | 0x0A
-# R5        | 0                     | 0x00 (R1 ya no es menor que R2)
-# R6        | 1                     | 0x01 (R4 < 15)
+# Subrutina C
+ADDI R2, R2, 10       # Incrementa a R2 en 10
+JR R20                # Salta a la direccion desde donde se invoco
+
+# Subrutina B
+ADDI R2, R2, 10       # Incrementa a R2 en 10
+JR R31                # Salta a la direccion desde donde se invoco
+
+# Finalización del programa
+HALT                  # Detener ejecución
