@@ -8,7 +8,7 @@ module latch
     output  [BUS_DATA - 1 : 0]  o_data      ,
 
     input   [BUS_DATA - 1 : 0]  i_data      ,
-    input                       i_enable    , // FIXME cambiar a i_valid
+    input                       i_valid     , // FIXME cambiar a i_valid
     input                       i_reset     ,
     input                       i_clock
 );
@@ -19,7 +19,7 @@ module latch
         if (i_reset) begin
             data_d <= 0;
         end
-        else if (i_enable) begin
+        else if (i_valid) begin
             data_d <= i_data;
         end
     end

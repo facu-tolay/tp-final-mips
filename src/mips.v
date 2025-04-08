@@ -131,7 +131,7 @@ module mips
         .o_data     (de_if_a_id[31:0]               ),
 
         .i_data     (pc_suma_result                 ),
-        .i_enable   (i_enable_stages_transitions[3] && stall_latch),
+        .i_valid   (i_enable_stages_transitions[3] && stall_latch),
         .i_reset    (i_reset || i_pc_reset          ),
         .i_clock    (i_clock                        )
     );
@@ -144,7 +144,7 @@ module mips
     (
         .i_clock    (i_clock                                                ),
         .i_reset    (i_reset || (i_enable_stages_transitions[3] && if_flush) || i_pc_reset ),
-        .i_enable   (i_enable_stages_transitions[3] && stall_latch                         ),
+        .i_valid   (i_enable_stages_transitions[3] && stall_latch                         ),
         .i_data     (instruction                                            ),
         .o_data     (de_if_a_id[63:32]                                      )
     );
@@ -305,7 +305,7 @@ module mips
     (
         .i_clock        (i_clock                        ),
         .i_reset        (i_reset || i_pc_reset          ),
-        .i_enable       (i_enable_stages_transitions[2] ),
+        .i_valid       (i_enable_stages_transitions[2] ),
         .i_data         ({o_direccion_rd, o_direccion_rt,o_dato_inmediato, o_dato_rb,   // FIXME pasar a una expresion wire y assign
                           o_dato_ra, o_signals[REG_DST], o_signals[ALU_SRC], o_signals[OP2:OP0],
                           o_signals[SHIFT_SRC], o_signals[DATA_MASK_1:DATA_MASK_0],
@@ -344,7 +344,7 @@ module mips
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
-        .i_enable   (i_enable_stages_transitions[1] ),
+        .i_valid   (i_enable_stages_transitions[1] ),
         .i_data     ({o_reg_address, o_mem_data, o_alu_data, de_id_a_ex[7:5], de_id_a_ex[3:0]}), // FIXME pasar a una expresion wire y assign
         .o_data     (de_ex_a_mem                    )
     );
@@ -378,7 +378,7 @@ module mips
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
-        .i_enable   (i_enable_stages_transitions[0] ),
+        .i_valid   (i_enable_stages_transitions[0] ),
         .i_data     ({de_ex_a_mem[75:71], o_data_salida_de_memoria,de_ex_a_mem[2] ,de_ex_a_mem[0]}), // FIXME pasar a una expresion wire y assign
         .o_data     (de_mem_a_wb                    )
     );
