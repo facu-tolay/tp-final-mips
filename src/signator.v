@@ -6,10 +6,10 @@ module signator // FIXME cambiar nombre
     parameter NB_MASK   = 2
 )
 (
-    output [NB_DATA     -1 : 0] o_dato,
+    output [NB_DATA     -1 : 0] o_dato       ,
 
-    input  [NB_DATA     -1 : 0] i_dato,
-    input  [NB_MASK     -1 : 0] i_mascara,
+    input  [NB_DATA     -1 : 0] i_dato       ,
+    input  [NB_MASK     -1 : 0] i_mascara    ,
     input                       i_is_unsigned
 );
     reg [NB_DATA-1 : 0] reg_data_out;

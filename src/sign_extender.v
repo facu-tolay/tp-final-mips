@@ -6,7 +6,7 @@ module sign_extender
     parameter NB_WORD   = 16
 )
 (
-    input  [NB_WORD     -1 : 0] data_in     ,
+    input  [NB_WORD     -1 : 0] data_in ,
     output [NB_DATA     -1 : 0] data_out
 );
 

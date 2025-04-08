@@ -7,12 +7,12 @@ module clock_divider
 )
 (
     output wire             o_clock_div,
-    input  wire             i_clock,
+    input  wire             i_clock    ,
     input  wire             i_reset
 );
 
     reg [NB_COUNTER -1 : 0] counter        = {NB_COUNTER{1'b0}};
-    reg                     internal_clock = 1'b0;
+    reg                     internal_clock = 1'b0              ;
 
     // --------------------------------------------------
     // Clock divider main block
@@ -20,11 +20,11 @@ module clock_divider
     always @(posedge i_clock) begin
         if (i_reset) begin
             counter        <= {NB_COUNTER{1'b0}};
-            internal_clock <= 1'b0;
+            internal_clock <= 1'b0              ;
         end
         else begin
             if (counter == (DIVIDER / 2) - 1) begin
-                internal_clock <= ~internal_clock;
+                internal_clock <= ~internal_clock   ;
                 counter        <= {NB_COUNTER{1'b0}};
             end
             else begin

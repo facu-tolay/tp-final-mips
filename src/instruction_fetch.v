@@ -27,7 +27,7 @@ module instruction_fetch
     )
     u_pc_unit
     (
-        .i_enable   (i_stall                ),
+        .i_valid   (i_stall                ),
         .i_data     (i_new_pc               ),
         .o_data     (pc_value               ),
         .i_reset    (i_reset || i_pc_reset  ),

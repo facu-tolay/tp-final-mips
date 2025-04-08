@@ -65,10 +65,10 @@ module instruction_decode
 );
 
     wire  [NB_DATA              -1 : 0] salida_de_forwarding_dato_a;
-    wire  [NB_DATA              -1 : 0] salida_del_ra;
-    wire  [NB_DATA              -1 : 0] salida_del_rb;
-    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_a;
-    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_b;
+    wire  [NB_DATA              -1 : 0] salida_del_ra              ;
+    wire  [NB_DATA              -1 : 0] salida_del_rb              ;
+    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_a          ;
+    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_b          ;
 
     mux
     #(
@@ -158,13 +158,13 @@ module instruction_decode
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign  o_campo_op               = i_instruccion[31:26];
-    assign  o_dato_direc_branch      = o_dato_inmediato; // FIXME esto wtf ?? esta duplicada la salida
-    assign  o_dato_direc_jump        = i_instruccion[25:0];
+    assign  o_campo_op               = i_instruccion[31:26]       ;
+    assign  o_dato_direc_branch      = o_dato_inmediato           ; // FIXME esto wtf ?? esta duplicada la salida
+    assign  o_dato_direc_jump        = i_instruccion[25:0]        ;
     assign  o_dato_ra_para_condicion = salida_de_forwarding_dato_a;
-    assign  o_dato_rb_para_condicion = o_dato_rb;
-    assign  o_direccion_rd           = i_instruccion[15:11];
-    assign  o_direccion_rs           = i_instruccion[25:21];
-    assign  o_direccion_rt           = i_instruccion[20:16];
+    assign  o_dato_rb_para_condicion = o_dato_rb                  ;
+    assign  o_direccion_rd           = i_instruccion[15:11]       ;
+    assign  o_direccion_rs           = i_instruccion[25:21]       ;
+    assign  o_direccion_rt           = i_instruccion[20:16]       ;
 
 endmodule

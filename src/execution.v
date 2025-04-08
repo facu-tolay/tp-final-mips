@@ -3,8 +3,8 @@
 module execution
 #(
     parameter NB_DATA           = 32,
-    parameter NB_REG_ADDRESS    = 5,
-    parameter NB_OP_FIELD       = 6,
+    parameter NB_REG_ADDRESS    = 5 ,
+    parameter NB_OP_FIELD       = 6 ,
     parameter NB_ALU_OP_FIELD   = 3
 )
 (
@@ -22,7 +22,7 @@ module execution
     output  [NB_DATA        -1 : 0] o_alu_data
 );
 
-    wire [NB_OP_FIELD -1 : 0] o_alu_func;
+    wire [NB_OP_FIELD -1 : 0] o_alu_func      ;
     wire [NB_DATA     -1 : 0] o_mux_alu_data_a;
     wire [NB_DATA     -1 : 0] o_mux_alu_data_b;
 

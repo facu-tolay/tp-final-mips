@@ -8,29 +8,29 @@ module memory_access
     parameter NUM_DIREC = 7
 )
 (
-    input                       i_clk,
-    input                       i_reset,
-    input                       i_wr_mem,
-    input                       i_is_unsigned,
-    input                       i_mem_to_reg,
-    input  [TAM_MASK    -1 : 0] i_data_mask,
-    input  [TAM_DATA    -1 : 0] i_direc_mem,
-    input  [TAM_DATA    -1 : 0] i_data,
+    input                       i_clk          ,
+    input                       i_reset        ,
+    input                       i_wr_mem       ,
+    input                       i_is_unsigned  ,
+    input                       i_mem_to_reg   ,
+    input  [TAM_MASK    -1 : 0] i_data_mask    ,
+    input  [TAM_DATA    -1 : 0] i_direc_mem    ,
+    input  [TAM_DATA    -1 : 0] i_data         ,
     input  [NUM_DIREC   -1 : 0] i_debug_pointer,
-    output [TAM_DATA    -1 : 0] o_debug_read,
+    output [TAM_DATA    -1 : 0] o_debug_read   ,
     output [TAM_DATA    -1 : 0] o_data
 );
 
-    wire [NUM_BYTES -1 : 0] bits_de_mascara_a_memoria;
+    wire [NUM_BYTES -1 : 0] bits_de_mascara_a_memoria ;
     wire [TAM_DATA  -1 : 0] dato_de_memoria_a_signador;
-    wire [TAM_DATA  -1 : 0] dato_signado;
+    wire [TAM_DATA  -1 : 0] dato_signado              ;
 
     // --------------------------------------------------
     // Masking for bytes in memory
     // --------------------------------------------------
     assign bits_de_mascara_a_memoria[3 : 2] = {i_data_mask[1], i_data_mask[1]};
-    assign bits_de_mascara_a_memoria[1    ] = i_data_mask[0];
-    assign bits_de_mascara_a_memoria[0    ] = 1'b1;
+    assign bits_de_mascara_a_memoria[1    ] = i_data_mask[0]                  ;
+    assign bits_de_mascara_a_memoria[0    ] = 1'b1                            ;
 
     // --------------------------------------------------
     // Data memory
