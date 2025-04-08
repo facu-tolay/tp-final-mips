@@ -21,27 +21,27 @@ module top
     input  wire                     i_clock
 );
 
-    wire    [NB_DATA              -1 : 0]   debug_read_reg;
-    wire    [NB_DATA              -1 : 0]   debug_read_mem;
-    wire    [NB_DATA              -1 : 0]   debug_read_pc;
-    wire                                    uart_tx_done;
-    wire                                    clock_1_4;
+    wire    [NB_DATA              -1 : 0]   debug_read_reg           ;
+    wire    [NB_DATA              -1 : 0]   debug_read_mem           ;
+    wire    [NB_DATA              -1 : 0]   debug_read_pc            ;
+    wire                                    uart_tx_done             ;
+    wire                                    clock_1_4                ;
 
-    wire                                    is_program_end;
+    wire                                    is_program_end           ;
     wire                                    load_program_write_enable;
-    wire                                    pc_reset;
-    wire                                    delete_program;
-    wire                                    uart_enable_send_data;
+    wire                                    pc_reset                 ;
+    wire                                    delete_program           ;
+    wire                                    uart_enable_send_data    ;
 
-    wire    [NB_REG_ADDRESS       -1 : 0]   debug_read_reg_address;
-    wire    [NB_MEM_ADDRESS       -1 : 0]   debug_read_mem_address;
+    wire    [NB_REG_ADDRESS       -1 : 0]   debug_read_reg_address   ;
+    wire    [NB_MEM_ADDRESS       -1 : 0]   debug_read_mem_address   ;
 
-    wire    [NB_BYTE              -1 : 0]   load_program_byte;
+    wire    [NB_BYTE              -1 : 0]   load_program_byte        ;
     wire    [N_STAGES_TRANSITIONS -1 : 0]   enable_stages_transitions;
 
-    wire    [NB_DATA              -1 : 0]   uart_data_to_send;
-    wire    [NB_BYTE              -1 : 0]   uart_receive_byte;
-    wire                                    uart_receive_byte_done;
+    wire    [NB_DATA              -1 : 0]   uart_data_to_send        ;
+    wire    [NB_BYTE              -1 : 0]   uart_receive_byte        ;
+    wire                                    uart_receive_byte_done   ;
 
     // --------------------------------------------------
     // Main clock divider 1/4
@@ -137,7 +137,7 @@ module top
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign  o_test                  = i_test;
+    assign  o_test                  = i_test        ;
     assign  o_programa_terminado    = is_program_end;
 
 endmodule

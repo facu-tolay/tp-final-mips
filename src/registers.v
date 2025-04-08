@@ -24,10 +24,10 @@ module registers
 );
 
     reg [NB_DATA    -1 : 0] registers_memory [N_REGISTERS-1 : 0];
-    reg [NB_DATA    -1 : 0] read_reg_a;
-    reg [NB_DATA    -1 : 0] read_reg_b;
-    reg [NB_DATA    -1 : 0] read_reg_debug;
-    integer                 i;
+    reg [NB_DATA    -1 : 0] read_reg_a                          ;
+    reg [NB_DATA    -1 : 0] read_reg_b                          ;
+    reg [NB_DATA    -1 : 0] read_reg_debug                      ;
+    integer                 i                                   ;
 
     // --------------------------------------------------
     // Write registers block
@@ -57,8 +57,8 @@ module registers
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_read_reg_data_a     = read_reg_a;
-    assign o_read_reg_data_b     = read_reg_b;
+    assign o_read_reg_data_a     = read_reg_a    ;
+    assign o_read_reg_data_b     = read_reg_b    ;
     assign o_read_reg_data_debug = read_reg_debug;
 
 endmodule

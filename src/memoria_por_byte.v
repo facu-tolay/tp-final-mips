@@ -2,25 +2,25 @@
 
 module memoria_por_byte
 #(
-    parameter NB_DATA       = 32,
-    parameter NB_BYTE       = 8,
-    parameter NUM_ENABLES   = NB_DATA / 8,
-    parameter NUM_SLOTS     = 32*4,
+    parameter NB_DATA       = 32               ,
+    parameter NB_BYTE       = 8                ,
+    parameter NUM_ENABLES   = NB_DATA / 8      ,
+    parameter NUM_SLOTS     = 32*4             ,
     parameter NUM_DIREC     = $clog2(NUM_SLOTS)
 )
 (
     input  wire                         i_write_enable,
-    input  wire [NUM_ENABLES    -1 : 0] i_byte_enb,
-    input  wire [NUM_DIREC      -1 : 0] i_direcc,
-    input  wire [NB_DATA        -1 : 0] i_data,
+    input  wire [NUM_ENABLES    -1 : 0] i_byte_enb    ,
+    input  wire [NUM_DIREC      -1 : 0] i_direcc      ,
+    input  wire [NB_DATA        -1 : 0] i_data        ,
 
     input  wire [NUM_DIREC      -1 : 0] i_direcc_debug,
 
-    output wire [NB_DATA        -1 : 0] o_data_debug,
+    output wire [NB_DATA        -1 : 0] o_data_debug  ,
 
-    output wire [NB_DATA        -1 : 0] o_data,
+    output wire [NB_DATA        -1 : 0] o_data        ,
 
-    input  wire                         i_reset,
+    input  wire                         i_reset       ,
     input  wire                         i_clock
 );
 
@@ -29,11 +29,11 @@ module memoria_por_byte
     reg [NB_BYTE -1 : 0] byte_2;
     reg [NB_BYTE -1 : 0] byte_3;
 
-    reg [NB_DATA-1 : 0] data_read;
+    reg [NB_DATA-1 : 0] data_read      ;
     reg [NB_DATA-1 : 0] data_debug_read;
 
     reg [NB_BYTE -1 : 0] data_memory [NUM_SLOTS-1 : 0];
-    integer              i;
+    integer              i                            ;
 
     // --------------------------------------------------
     // Write data memory block
@@ -104,7 +104,7 @@ module memoria_por_byte
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_data       = data_read;
+    assign o_data       = data_read      ;
     assign o_data_debug = data_debug_read;
 
 endmodule

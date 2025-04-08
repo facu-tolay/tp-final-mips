@@ -6,15 +6,15 @@ module forwarding_unit
     parameter NB_FORWARDING_ENABLE  = 2
 )
 (
-    input   [NB_REG_ADDRESS         -1 : 0] i_rs_if_id,
-    input   [NB_REG_ADDRESS         -1 : 0] i_rt_if_id,
-    input   [NB_REG_ADDRESS         -1 : 0] i_rd_id_ex,
-    input   [NB_REG_ADDRESS         -1 : 0] i_rd_ex_mem,
-    input   [NB_REG_ADDRESS         -1 : 0] i_rd_mem_wb,
+    input   [NB_REG_ADDRESS         -1 : 0] i_rs_if_id     ,
+    input   [NB_REG_ADDRESS         -1 : 0] i_rt_if_id     ,
+    input   [NB_REG_ADDRESS         -1 : 0] i_rd_id_ex     ,
+    input   [NB_REG_ADDRESS         -1 : 0] i_rd_ex_mem    ,
+    input   [NB_REG_ADDRESS         -1 : 0] i_rd_mem_wb    ,
     input                                   i_reg_wr_ex_mem,
-    input                                   i_reg_wr_id_ex,
+    input                                   i_reg_wr_id_ex ,
     input                                   i_reg_wr_mem_wb,
-    output  [NB_FORWARDING_ENABLE   -1 : 0] o_forward_a,
+    output  [NB_FORWARDING_ENABLE   -1 : 0] o_forward_a    ,
     output  [NB_FORWARDING_ENABLE   -1 : 0] o_forward_b
 );
 
