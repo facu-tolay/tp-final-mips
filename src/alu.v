@@ -8,8 +8,8 @@ module alu
 (
     input  [NB_DATA     -1 : 0] i_data_a    ,
     input  [NB_DATA     -1 : 0] i_data_b    ,
-    input  [NB_OP_FIELD -1 : 0] i_func      ,
-    output [NB_DATA     -1 : 0] o_out       ,
+    input  [NB_OP_FIELD -1 : 0] i_opcode    ,
+    output [NB_DATA     -1 : 0] o_result    ,
     output                      o_zero_bit
 );
 
@@ -35,7 +35,7 @@ module alu
     // ALU operations
     // --------------------------------------------------
     always @(*) begin
-        case (i_func)
+        case (i_opcode)
             // Arithmetics
             ADD     : reg_result = $signed(i_data_a)    +   $signed(i_data_b)               ;
             ADDU    : reg_result = i_data_a             +   i_data_b                        ;
@@ -64,7 +64,7 @@ module alu
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_out        = reg_result;
-    assign o_zero_bit   = ~|o_out;
+    assign o_result     = reg_result;
+    assign o_zero_bit   = ~|o_result;
 
 endmodule

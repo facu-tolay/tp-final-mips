@@ -101,8 +101,6 @@ def main_menu():
             print("Opción no válida, inténtalo de nuevo.")
 
 
-# FIXME hacer un bloque generico en RTL que detecte caracteres y saque una salida cuando la vea
-
 class thread(threading.Thread):
 
     def __init__(self, thread_name):

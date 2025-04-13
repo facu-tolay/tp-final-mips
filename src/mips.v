@@ -319,18 +319,18 @@ module mips
     // --------------------------------------------------
     execution u_execution_stage
     (
-        .i_shift_src            (de_id_a_ex[8]          ), // FIXME pasar a una expresion wire y assign
-        .i_reg_dst              (de_id_a_ex[13]         ), // FIXME pasar a una expresion wire y assign
-        .i_alu_src              (de_id_a_ex[12]         ), // FIXME pasar a una expresion wire y assign
-        .i_alu_op               (de_id_a_ex[11:9]       ), // FIXME pasar a una expresion wire y assign
+        .i_shift_source         (de_id_a_ex[8]          ), // FIXME pasar a una expresion wire y assign
+        .i_register_destination (de_id_a_ex[13]         ), // FIXME pasar a una expresion wire y assign
+        .i_alu_source           (de_id_a_ex[12]         ), // FIXME pasar a una expresion wire y assign
+        .i_alu_operation        (de_id_a_ex[11:9]       ), // FIXME pasar a una expresion wire y assign
         .i_ra_data              (de_id_a_ex[45:14]      ), // FIXME pasar a una expresion wire y assign
         .i_rb_data              (de_id_a_ex[77:46]      ), // FIXME pasar a una expresion wire y assign
         .i_sign_extender_data   (de_id_a_ex[109:78]     ), // FIXME pasar a una expresion wire y assign
         .i_rt_address           (de_id_a_ex[114 : 110]  ), // FIXME pasar a una expresion wire y assign
         .i_rd_address           (de_id_a_ex[119 : 115]  ), // FIXME pasar a una expresion wire y assign
-        .o_reg_address          (o_reg_address          ),
-        .o_mem_data             (o_mem_data             ),
-        .o_alu_data             (alu_result             )
+        .o_register_address     (o_reg_address          ),
+        .o_memory_data          (o_mem_data             ),
+        .o_alu_result           (alu_result             )
     );
 
     // --------------------------------------------------

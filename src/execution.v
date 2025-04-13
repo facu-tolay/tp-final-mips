@@ -8,74 +8,43 @@ module execution
     parameter NB_ALU_OP_FIELD   = 3
 )
 (
-    input                           i_shift_src         ,
-    input                           i_reg_dst           ,
-    input                           i_alu_src           ,
-    input   [NB_ALU_OP_FIELD-1 : 0] i_alu_op            ,
-    input   [NB_DATA        -1 : 0] i_ra_data           ,
-    input   [NB_DATA        -1 : 0] i_rb_data           ,
-    input   [NB_DATA        -1 : 0] i_sign_extender_data,
-    input   [NB_REG_ADDRESS -1 : 0] i_rt_address        ,
-    input   [NB_REG_ADDRESS -1 : 0] i_rd_address        ,
-    output  [NB_REG_ADDRESS -1 : 0] o_reg_address       ,
-    output  [NB_DATA        -1 : 0] o_mem_data          ,
-    output  [NB_DATA        -1 : 0] o_alu_data
+    input  wire                             i_shift_source          ,
+    input  wire                             i_register_destination  ,
+    input  wire                             i_alu_source            ,
+    input  wire [NB_ALU_OP_FIELD    -1 : 0] i_alu_operation         ,
+    input  wire [NB_DATA            -1 : 0] i_ra_data               ,
+    input  wire [NB_DATA            -1 : 0] i_rb_data               ,
+    input  wire [NB_DATA            -1 : 0] i_sign_extender_data    ,
+    input  wire [NB_REG_ADDRESS     -1 : 0] i_rt_address            ,
+    input  wire [NB_REG_ADDRESS     -1 : 0] i_rd_address            ,
+    output wire [NB_REG_ADDRESS     -1 : 0] o_register_address      ,
+    output wire [NB_DATA            -1 : 0] o_memory_data           ,
+    output wire [NB_DATA            -1 : 0] o_alu_result
 );
 
-    wire [NB_OP_FIELD -1 : 0] o_alu_func;
-    wire [NB_DATA     -1 : 0] o_mux_alu_data_a;
-    wire [NB_DATA     -1 : 0] o_mux_alu_data_b;
+    wire [NB_OP_FIELD -1 : 0] alu_opcode;
+    wire [NB_DATA     -1 : 0] alu_data_select_a;
+    wire [NB_DATA     -1 : 0] alu_data_select_b;
 
     // --------------------------------------------------
     // Destination register selection
     // --------------------------------------------------
-    mux
-    #(
-        .BITS_ENABLES   (1              ),
-        .BUS_SIZE       (NB_REG_ADDRESS )
-    )
-    mux_reg
-    (
-        .i_en           (i_reg_dst                                          ),
-        .i_data         ({i_rt_address, i_rd_address}                       ),
-        .o_data         (o_reg_address                                      )
-    );
+    assign o_register_address = i_register_destination ? i_rt_address : i_rd_address; // FIXME probar
 
     // --------------------------------------------------
     // A/B data selection
     // --------------------------------------------------
-    mux
-    #(
-        .BITS_ENABLES   (1              ),
-        .BUS_SIZE       (NB_DATA        )
-    )
-    mux_alu
-    (
-        .i_en           (i_alu_src                                          ),
-        .i_data         ({i_sign_extender_data, i_rb_data}                  ),
-        .o_data         (o_mux_alu_data_b                                   )
-    );
-
-    mux
-    #(
-        .BITS_ENABLES   (1              ),
-        .BUS_SIZE       (NB_DATA        )
-    )
-    mux_shift
-    (
-        .i_en           (i_shift_src                                        ),
-        .i_data         ({{27'b0, i_sign_extender_data[10 : 6]}, i_ra_data} ),
-        .o_data         (o_mux_alu_data_a                                   )
-    );
+    assign alu_data_select_a = i_shift_source ? {27'b0, i_sign_extender_data[10 : 6]} : i_ra_data; // FIXME probar
+    assign alu_data_select_b = i_alu_source ? i_sign_extender_data : i_rb_data; // FIXME probar
 
     // --------------------------------------------------
     // ALU control block
     // --------------------------------------------------
     alu_control u_alu_control
     (
-        .i_alu_op       (i_alu_op                               ),
-        .i_func         (i_sign_extender_data[NB_OP_FIELD-1 : 0]),
-        .o_alu_func     (o_alu_func                             )
+        .i_alu_operation    (i_alu_operation                            ),
+        .i_alu_function     (i_sign_extender_data[NB_OP_FIELD-1 : 0]    ),
+        .o_alu_opcode       (alu_opcode                                 )
     );
 
     // --------------------------------------------------
@@ -83,16 +52,16 @@ module execution
     // --------------------------------------------------
     alu u_alu
     (
-        .i_data_a       (o_mux_alu_data_a       ),
-        .i_data_b       (o_mux_alu_data_b       ),
-        .i_func         (o_alu_func             ),
-        .o_out          (o_alu_data             ),
-        .o_zero_bit     (zero_bit               )
+        .i_data_a           (alu_data_select_a                          ),
+        .i_data_b           (alu_data_select_b                          ),
+        .i_opcode           (alu_opcode                                 ),
+        .o_result           (o_alu_result                               ),
+        .o_zero_bit         (                                           )
     );
 
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_mem_data = i_rb_data;
+    assign o_memory_data = i_rb_data;
 
 endmodule
