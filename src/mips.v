@@ -194,7 +194,7 @@ module mips
     // --------------------------------------------------
     // Instruction Decode stage
     // --------------------------------------------------
-    instruction_decode ID
+    instruction_decode u_instruction_decode
     (
         .i_clock                        (i_clock                    ),
         .i_reset                        (i_reset || i_pc_reset      ),
@@ -307,7 +307,7 @@ module mips
     // --------------------------------------------------
     // Memory access stage
     // --------------------------------------------------
-    memory_access MEM
+    memory_access u_memory_access
     (
         .i_clock            (i_clock                  ),
         .i_reset            (i_reset|| i_pc_reset     ),

@@ -69,29 +69,20 @@ module instruction_decode
     wire  [NB_DATA              -1 : 0] salida_del_rb;
     wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_a;
     wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_b;
+    wire                                is_number_negative;
 
-    assign o_dato_ra = i_jump_o_branch ? i_dato_nuevo_pc : salida_de_forwarding_dato_a;
-    // mux
-    // #(
-    //     .BITS_ENABLES       (1                      ),
-    //     .BUS_SIZE           (NB_DATA                )
-    // )
-    // u_mux_de_dato_o_pc
-    // (
-    //     .i_en               (i_jump_o_branch                                                        ),
-    //     .i_data             ({i_dato_nuevo_pc,salida_de_forwarding_dato_a}                          ),
-    //     .o_data             (o_dato_ra                                                              )
-    // );
-
-     mux
-     #(
+    // --------------------------------------------------
+    // A/B forwarding selection
+    // --------------------------------------------------
+    mux
+    #(
         .BITS_ENABLES       (NB_FORWARDING_ENABLE   ),
         .BUS_SIZE           (NB_DATA                )
     )
     u_mux_de_forward_para_dato_a
      (
         .i_en               (bits_de_forward_a                                                      ),
-        .i_data             ({i_dato_de_id_ex,i_dato_de_mem_wb ,i_dato_de_ex_mem,salida_del_ra }    ),
+        .i_data             ({i_dato_de_id_ex, i_dato_de_mem_wb, i_dato_de_ex_mem,salida_del_ra}    ),
         .o_data             (salida_de_forwarding_dato_a                                            )
     );
 
@@ -103,7 +94,7 @@ module instruction_decode
     u_mux_de_forward_para_dato_b
     (
         .i_en               (bits_de_forward_b                                                      ),
-        .i_data             ({i_dato_de_id_ex,i_dato_de_mem_wb,i_dato_de_ex_mem,salida_del_rb }     ),
+        .i_data             ({i_dato_de_id_ex, i_dato_de_mem_wb, i_dato_de_ex_mem,salida_del_rb}    ),
         .o_data             (o_dato_rb                                                              )
     );
 
@@ -112,16 +103,16 @@ module instruction_decode
     // --------------------------------------------------
     forwarding_unit u_forwarding_unit
     (
-        .i_rs_if_id             (i_instruccion[25:21]           ),
-        .i_rt_if_id             (i_instruccion[20:16]           ),
-        .i_rd_id_ex             (i_direc_rd_id_ex               ),
-        .i_rd_ex_mem            (i_direc_rd_ex_mem              ),
-        .i_rd_mem_wb            (i_direc_rd_mem_wb              ),
-        .i_reg_wr_ex_mem        (i_reg_write_ex_mem             ),
-        .i_reg_wr_id_ex         (i_reg_write_id_ex              ),
-        .i_reg_wr_mem_wb        (i_reg_write_mem_wb             ),
-        .o_forward_a            (bits_de_forward_a              ),
-        .o_forward_b            (bits_de_forward_b              )
+        .i_rs_if_id         (i_instruccion[25:21]           ),
+        .i_rt_if_id         (i_instruccion[20:16]           ),
+        .i_rd_id_ex         (i_direc_rd_id_ex               ),
+        .i_rd_ex_mem        (i_direc_rd_ex_mem              ),
+        .i_rd_mem_wb        (i_direc_rd_mem_wb              ),
+        .i_reg_wr_ex_mem    (i_reg_write_ex_mem             ),
+        .i_reg_wr_id_ex     (i_reg_write_id_ex              ),
+        .i_reg_wr_mem_wb    (i_reg_write_mem_wb             ),
+        .o_forward_a        (bits_de_forward_a              ),
+        .o_forward_b        (bits_de_forward_b              )
     );
 
     // --------------------------------------------------
@@ -146,20 +137,20 @@ module instruction_decode
     // --------------------------------------------------
     // Sign extension
     // --------------------------------------------------
-    wire is_number_negative;
     assign is_number_negative = i_instruccion[NB_WORD-1] == 1;
     assign o_dato_inmediato   = is_number_negative ? {16'b1111111111111111, i_instruccion[15:0]} : {16'b0000000000000000, i_instruccion[15:0]};
 
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign  o_campo_op               = i_instruccion[31:26];
-    assign  o_dato_direc_branch      = o_dato_inmediato; // FIXME esto wtf ?? esta duplicada la salida
-    assign  o_dato_direc_jump        = i_instruccion[25:0];
-    assign  o_dato_ra_para_condicion = salida_de_forwarding_dato_a;
-    assign  o_dato_rb_para_condicion = o_dato_rb;
-    assign  o_direccion_rd           = i_instruccion[15:11];
-    assign  o_direccion_rs           = i_instruccion[25:21];
-    assign  o_direccion_rt           = i_instruccion[20:16];
+    assign o_campo_op               = i_instruccion[31:26];
+    assign o_dato_direc_branch      = o_dato_inmediato; // FIXME esto wtf ?? esta duplicada la salida
+    assign o_dato_direc_jump        = i_instruccion[25:0];
+    assign o_dato_ra                = i_jump_o_branch ? i_dato_nuevo_pc : salida_de_forwarding_dato_a;
+    assign o_dato_ra_para_condicion = salida_de_forwarding_dato_a;
+    assign o_dato_rb_para_condicion = o_dato_rb;
+    assign o_direccion_rd           = i_instruccion[15:11];
+    assign o_direccion_rs           = i_instruccion[25:21];
+    assign o_direccion_rt           = i_instruccion[20:16];
 
 endmodule
