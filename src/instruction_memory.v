@@ -21,22 +21,8 @@ module instruction_memory
 
     reg [NB_BYTE    -1 : 0] instr_memory [N_BYTE_REGISTERS -1 : 0];
     reg [NB_ADDRESS -1 : 0] write_address;
-    // reg [NB_ADDRESS -1 : 0] next_write_ptr;
-    // reg [NB_ADDRESS -1 : 0] succ_write_ptr;
     reg [NB_DATA    -1 : 0] read_instruction;
     integer                 i;
-
-    // --------------------------------------------------
-    // Next pointer block
-    // --------------------------------------------------
-    // FIXMEEE
-    // always @(*) begin
-    //     succ_write_ptr = write_address + 1; // successive pointer values
-    //     next_write_ptr = write_address; // default: keep old values
-    //     if(i_write_enable) begin
-    //         next_write_ptr = succ_write_ptr;
-    //     end
-    // end
 
     // --------------------------------------------------
     // Write pointer block

@@ -35,8 +35,8 @@ module memory_access
     // --------------------------------------------------
     // Data memory
     // --------------------------------------------------
-    // data_memory u_data_memory // FIXME probarrr
-    memoria_por_byte u_data_memory
+    // memoria_por_byte u_data_memory
+    data_memory u_data_memory // FIXME probarrr
     (
         .i_clock            (i_clock                        ),
         .i_reset            (i_reset                        ),

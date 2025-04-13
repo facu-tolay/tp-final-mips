@@ -145,12 +145,6 @@ module instruction_decode
     // --------------------------------------------------
     // Sign extension
     // --------------------------------------------------
-    // FIXME este bloque vuela
-    // sign_extender u_sign_extender
-    // (
-    //     .data_in                (i_instruccion[15:0]            ),
-    //     .data_out               (o_dato_inmediato               )
-    // );
     wire is_number_negative;
     assign is_number_negative = i_instruccion[NB_WORD-1] == 1;
     assign o_dato_inmediato   = is_number_negative ? {16'b1111111111111111, i_instruccion[15:0]} : {16'b0000000000000000, i_instruccion[15:0]};

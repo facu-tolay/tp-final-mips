@@ -22,7 +22,6 @@ module control_unit
     // --------------------------------------------------
     // Main block
     // --------------------------------------------------
-
     always @(*) begin
         if(~i_enable_control) begin
             casez({i_operation, i_function})

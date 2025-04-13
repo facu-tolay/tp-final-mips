@@ -19,23 +19,11 @@ module instruction_fetch
     input                       i_clock
 );
 
-    // wire [NB_DATA - 1 : 0] pc_value;
-    reg  [NB_DATA - 1 : 0] next_pc;
+    reg [NB_DATA -1 : 0] next_pc;
 
-    // FIXME reemplazar con el always
-    // latch
-    // #(
-    //     .BUS_DATA   (NB_DATA                )
-    // )
-    // u_pc_unit
-    // (
-    //     .i_enable   (i_stall                ),
-    //     .i_data     (i_next_pc              ),
-    //     .o_data     (pc_value               ),
-    //     .i_reset    (i_reset || i_pc_reset  ),
-    //     .i_clock    (i_clock                )
-    // );
-
+    // --------------------------------------------------
+    // Next PC block
+    // --------------------------------------------------
     always @(posedge i_clock) begin
         if (i_reset || i_pc_reset) begin
             next_pc <= 0;
