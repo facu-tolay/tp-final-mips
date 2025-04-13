@@ -13,20 +13,20 @@ module mips
     parameter NB_SIGNALS            = 18
 )
 (
-    output [NB_DATA              - 1 : 0]   o_debug_read_reg                ,
-    output [NB_DATA              - 1 : 0]   o_debug_read_mem                ,
-    output [NB_DATA              - 1 : 0]   o_debug_read_pc                 ,
-    output                                  o_is_program_end                ,
+    output wire [NB_DATA              - 1 : 0]   o_debug_read_reg                ,
+    output wire [NB_DATA              - 1 : 0]   o_debug_read_mem                ,
+    output wire [NB_DATA              - 1 : 0]   o_debug_read_pc                 ,
+    output wire                                  o_is_program_end                ,
 
-    input  [NB_REG_ADDRESS       - 1 : 0]   i_debug_read_reg_address        ,
-    input  [NB_MEM_ADDRESS       - 1 : 0]   i_debug_read_mem_address        ,
-    input  [N_STAGES_TRANSITIONS - 1 : 0]   i_enable_stages_transitions     ,
-    input  [NB_BYTE              - 1 : 0]   i_load_program_byte             ,
-    input                                   i_load_program_write_enable     ,
-    input                                   i_pc_reset                      ,
-    input                                   i_delete_program                ,
-    input                                   i_reset                         ,
-    input                                   i_clock
+    input  wire [NB_REG_ADDRESS       - 1 : 0]   i_debug_read_reg_address        ,
+    input  wire [NB_MEM_ADDRESS       - 1 : 0]   i_debug_read_mem_address        ,
+    input  wire [N_STAGES_TRANSITIONS - 1 : 0]   i_enable_stages_transitions     ,
+    input  wire [NB_BYTE              - 1 : 0]   i_load_program_byte             ,
+    input  wire                                  i_load_program_write_enable     ,
+    input  wire                                  i_pc_reset                      ,
+    input  wire                                  i_delete_program                ,
+    input  wire                                  i_reset                         ,
+    input  wire                                  i_clock
 );
 
     //  17      16      15        14     13      12   11    10    9       8       7       6        5        4        3         2          1        0
@@ -153,81 +153,31 @@ module mips
     // --------------------------------------------------
     // Interstage muxes IF/ID
     // --------------------------------------------------
-    assign next_pc = control_signals[JMP_OR_BRCH] ? mux_dir : mux_pc_immediate;
-    // mux
-    // #(
-    //     .BITS_ENABLES(1),
-    //     .BUS_SIZE(NB_DATA)
-    // )
-    // mux_jmp_brch
-    // (
-    //     .i_en       (control_signals[JMP_OR_BRCH]             ),
-    //     .i_data     ({mux_dir, mux_pc_immediate}    ), // FIXME pasar a una expresion wire y assign
-    //     .o_data     (next_pc                            )
-    // );
+    assign i_eq_neq                = o_dato_ra_para_condicion != o_dato_rb_para_condicion;
+    assign mux_eq_neq              = control_signals[EQ_OR_NEQ] ? i_eq_neq : ~i_eq_neq;
 
-    assign mux_dir = control_signals[JMP_SRC] ? {6'b0,o_dato_direc_jump} << 2 : o_dato_ra_para_condicion;
-    // mux
-    // #(
-    //     .BITS_ENABLES(1),
-    //     .BUS_SIZE(NB_DATA)
-    // )
-    // mux_dir
-    // (
-    //     .i_en       (control_signals[JMP_SRC]                                         ),
-    //     .i_data     ({{6'b0,o_dato_direc_jump} << 2 , o_dato_ra_para_condicion} ), // FIXME pasar a una expresion wire y assign
-    //     .o_data     (mux_dir                                                  )
-    // );
+    assign mux_dir                 = control_signals[JMP_SRC] ? {6'b0,o_dato_direc_jump} << 2 : o_dato_ra_para_condicion;
 
+    assign immediate_suma_result   = de_if_a_id[31 : 0] + $signed(o_dato_direc_branch << 2);
     assign enable_mux_pc_immediate = mux_eq_neq && control_signals[BRANCH];
     assign mux_pc_immediate        = enable_mux_pc_immediate ? immediate_suma_result : pc_suma_result;
-    // mux
-    // #(
-    //     .BITS_ENABLES(1),
-    //     .BUS_SIZE(NB_DATA)
-    // )
-    // mux_pc_immediate
-    // (
-    //     .i_en       (enable_mux_pc_immediate                    ),
-    //     .i_data     ({immediate_suma_result, pc_suma_result}    ), // FIXME pasar a una expresion wire y assign
-    //     .o_data     (mux_pc_immediate                         )
-    // );
 
-
-    assign mux_eq_neq = control_signals[EQ_OR_NEQ] ? i_eq_neq : ~i_eq_neq;
-    // mux
-    // #(
-    //     .BITS_ENABLES(1),
-    //     .BUS_SIZE(1)
-    // )
-    // mux_eq_neq
-    // (
-    //     .i_en       (control_signals[EQ_OR_NEQ]       ),
-    //     .i_data     ({i_eq_neq, ~i_eq_neq}      ), // FIXME pasar a una expresion wire y assign
-    //     .o_data     (mux_eq_neq               )
-    // );
-
-    assign i_eq_neq = o_dato_ra_para_condicion != o_dato_rb_para_condicion;
-
-    // --------------------------------------------------
-    // Sumador IF
-    // --------------------------------------------------
-    assign immediate_suma_result = de_if_a_id[31 : 0] + $signed(o_dato_direc_branch << 2);
+    assign next_pc                 = control_signals[JMP_OR_BRCH] ? mux_dir : mux_pc_immediate;
 
     // --------------------------------------------------
     // Hazard unit
     // --------------------------------------------------
     hazard_unit u_hazard_unit
     (
-        .i_jump_branch      (control_signals[JMP_OR_BRCH]     ),
-        .i_branch           (enable_mux_pc_immediate    ),
-        .i_mem_read_id_ex   (de_id_a_ex[4]              ), // FIXME pasar a una expresion wire y assign
-        .i_rs_if_id         (o_direccion_rs             ),
-        .i_rt_if_id         (o_direccion_rt             ),
-        .i_rt_id_ex         (de_id_a_ex[114 : 110]      ), // FIXME pasar a una expresion wire y assign
-        .o_if_flush         (if_flush                   ),
-        .o_risk_detected    (stall_ctl                  ),
-        .o_no_risk_detected (stall_latch                )
+        .i_jump_branch      (control_signals[JMP_OR_BRCH]),
+        .i_branch           (enable_mux_pc_immediate     ),
+        .i_mem_read_id_ex   (de_id_a_ex[4]               ), // FIXME pasar a una expresion wire y assign
+        .i_rs_if_id         (o_direccion_rs              ),
+        .i_rt_if_id         (o_direccion_rt              ),
+        .i_rt_id_ex         (de_id_a_ex[114 : 110]       ), // FIXME pasar a una expresion wire y assign
+        .o_if_flush         (if_flush                    ),
+        .o_risk_detected    (stall_ctl                   ),
+        .o_no_risk_detected (stall_latch                 )
     );
 
     // --------------------------------------------------
@@ -238,7 +188,7 @@ module mips
         .i_function         (de_if_a_id[37 : 32]    ), // FIXME pasar a una expresion wire y assign
         .i_operation        (o_campo_op             ),
         .i_enable_control   (stall_ctl              ),
-        .o_control          (control_signals              )
+        .o_control          (control_signals        )
     );
 
     // --------------------------------------------------
@@ -393,15 +343,12 @@ module mips
     // --------------------------------------------------
     write_back u_write_back
     (
-        .i_dato_de_mem      (de_mem_a_wb[33:2]  ), // FIXME pasar a una expresion wire y assign
+        .i_data_from_memory             (de_mem_a_wb[33:2]  ), // FIXME pasar a una expresion wire y assign
 
-        //direcciones
-        .i_direc_reg        (de_mem_a_wb[38:34] ), // FIXME pasar a una expresion wire y assign
+        .i_jump_return_dest_register    (de_mem_a_wb[38:34] ), // FIXME pasar a una expresion wire y assign
+        .i_jump_return_dest             (de_mem_a_wb[0]     ), // FIXME pasar a una expresion wire y assign
 
-        //seniales de control
-        .i_j_return_dest    (de_mem_a_wb[0]     ), // FIXME pasar a una expresion wire y assign
-
-        .o_dato             (dato_salido_wb     ),
-        .o_direccion        (direccion_de_wb    )
+        .o_data_write_back              (dato_salido_wb     ),
+        .o_address_write_back           (direccion_de_wb    )
     );
 endmodule

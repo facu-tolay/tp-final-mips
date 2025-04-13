@@ -6,11 +6,11 @@ module alu
     parameter NB_OP_FIELD   = 6
 )
 (
-    input  [NB_DATA     -1 : 0] i_data_a    ,
-    input  [NB_DATA     -1 : 0] i_data_b    ,
-    input  [NB_OP_FIELD -1 : 0] i_opcode    ,
-    output [NB_DATA     -1 : 0] o_result    ,
-    output                      o_zero_bit
+    input  wire [NB_DATA     -1 : 0] i_data_a    ,
+    input  wire [NB_DATA     -1 : 0] i_data_b    ,
+    input  wire [NB_OP_FIELD -1 : 0] i_opcode    ,
+    output wire [NB_DATA     -1 : 0] o_result    ,
+    output wire                      o_zero_bit
 );
 
     localparam SLL      = 6'b000000; // Left  Shift i_data_b shamt

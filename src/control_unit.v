@@ -6,11 +6,11 @@ module control_unit
     parameter NB_CONTROL  = 18
 )
 (
-    output  [NB_CONTROL     - 1 : 0] o_control          ,
+    output wire [NB_CONTROL     - 1 : 0] o_control          ,
 
-    input   [NB_FUNCTION    - 1 : 0] i_function         ,
-    input   [NB_FUNCTION    - 1 : 0] i_operation        ,
-    input                            i_enable_control
+    input  wire [NB_FUNCTION    - 1 : 0] i_function         ,
+    input  wire [NB_FUNCTION    - 1 : 0] i_operation        ,
+    input  wire                          i_enable_control
 );
 
     // Control signals definition

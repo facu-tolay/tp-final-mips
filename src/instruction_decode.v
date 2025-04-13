@@ -11,57 +11,57 @@ module instruction_decode
 )
 (
     //Intruccion
-    input   [NB_DATA        -1 : 0] i_instruccion                   ,
+    input  wire [NB_DATA        -1 : 0] i_instruccion                   ,
 
     // Cortocircuito
-    input                           i_reg_write_id_ex               ,
-    input                           i_reg_write_ex_mem              ,
-    input                           i_reg_write_mem_wb              ,
-    input   [NB_REG_ADDRESS -1 : 0] i_direc_rd_id_ex                ,
-    input   [NB_REG_ADDRESS -1 : 0] i_direc_rd_ex_mem               ,
-    input   [NB_REG_ADDRESS -1 : 0] i_direc_rd_mem_wb               ,
-    input   [NB_DATA        -1 : 0] i_dato_de_id_ex                 ,
-    input   [NB_DATA        -1 : 0] i_dato_de_ex_mem                ,
-    input   [NB_DATA        -1 : 0] i_dato_de_mem_wb                ,
+    input  wire                         i_reg_write_id_ex               ,
+    input  wire                         i_reg_write_ex_mem              ,
+    input  wire                         i_reg_write_mem_wb              ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_rd_id_ex                ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_rd_ex_mem               ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_rd_mem_wb               ,
+    input  wire [NB_DATA        -1 : 0] i_dato_de_id_ex                 ,
+    input  wire [NB_DATA        -1 : 0] i_dato_de_ex_mem                ,
+    input  wire [NB_DATA        -1 : 0] i_dato_de_mem_wb                ,
 
     //Al registro
-    input   [NB_DATA        -1 : 0] i_dato_de_escritura_en_reg      ,
-    input   [NB_REG_ADDRESS -1 : 0] i_direc_de_escritura_en_reg     ,
+    input  wire [NB_DATA        -1 : 0] i_dato_de_escritura_en_reg      ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_de_escritura_en_reg     ,
 
     // Para Debug
-    output  [NB_DATA        -1 : 0] o_dato_a_debug                  ,
-    input   [NB_REG_ADDRESS -1 : 0] i_direc_de_lectura_de_debug     ,
+    output wire [NB_DATA        -1 : 0] o_dato_a_debug                  ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_de_lectura_de_debug     ,
 
     // Para comparar salto
-    output  [NB_DATA        -1 : 0] o_dato_ra_para_condicion        ,
-    output  [NB_DATA        -1 : 0] o_dato_rb_para_condicion        ,
+    output wire [NB_DATA        -1 : 0] o_dato_ra_para_condicion        ,
+    output wire [NB_DATA        -1 : 0] o_dato_rb_para_condicion        ,
 
     //Para Branch
-    output  [NB_DATA        -1 : 0] o_dato_direc_branch             ,
+    output wire [NB_DATA        -1 : 0] o_dato_direc_branch             ,
 
     //Para Jump
-    output  [NB_JUMP_ADDRESS-1 : 0] o_dato_direc_jump               ,
+    output wire [NB_JUMP_ADDRESS-1 : 0] o_dato_direc_jump               ,
 
     // Para direccion de retorno
-    input   [NB_DATA        -1 : 0] i_dato_nuevo_pc                 ,
+    input  wire [NB_DATA        -1 : 0] i_dato_nuevo_pc                 ,
 
     //Datos
-    output  [NB_DATA        -1 : 0] o_dato_ra                       ,
-    output  [NB_DATA        -1 : 0] o_dato_rb                       ,
-    output  [NB_DATA        -1 : 0] o_dato_inmediato                ,
+    output wire [NB_DATA        -1 : 0] o_dato_ra                       ,
+    output wire [NB_DATA        -1 : 0] o_dato_rb                       ,
+    output wire [NB_DATA        -1 : 0] o_dato_inmediato                ,
     
-    output  [NB_REG_ADDRESS -1 : 0] o_direccion_rs                  ,
-    output  [NB_REG_ADDRESS -1 : 0] o_direccion_rt                  ,
-    output  [NB_REG_ADDRESS -1 : 0] o_direccion_rd                  ,
+    output wire [NB_REG_ADDRESS -1 : 0] o_direccion_rs                  ,
+    output wire [NB_REG_ADDRESS -1 : 0] o_direccion_rt                  ,
+    output wire [NB_REG_ADDRESS -1 : 0] o_direccion_rd                  ,
 
     // A control
-    output  [NB_OP_FIELD    -1 : 0] o_campo_op                      ,
+    output wire [NB_OP_FIELD    -1 : 0] o_campo_op                      ,
 
     // Flags de control
-    input                           i_jump_o_branch                 ,
+    input  wire                         i_jump_o_branch                 ,
 
-    input                           i_reset                         ,
-    input                           i_clock
+    input  wire                         i_reset                         ,
+    input  wire                         i_clock
 );
 
     wire  [NB_DATA              -1 : 0] salida_de_forwarding_dato_a;

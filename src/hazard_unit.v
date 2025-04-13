@@ -5,16 +5,16 @@ module hazard_unit
     parameter NB_REG_ADDRESS = 5
 )
 (
-    output                          o_risk_detected     ,
-    output                          o_no_risk_detected  ,
-    output                          o_if_flush          ,
+    output wire                         o_risk_detected     ,
+    output wire                         o_no_risk_detected  ,
+    output wire                         o_if_flush          ,
 
-    input   [NB_REG_ADDRESS -1 : 0] i_rs_if_id          ,
-    input   [NB_REG_ADDRESS -1 : 0] i_rt_if_id          ,
-    input   [NB_REG_ADDRESS -1 : 0] i_rt_id_ex          ,
-    input                           i_jump_branch       ,
-    input                           i_branch            ,
-    input                           i_mem_read_id_ex
+    input  wire [NB_REG_ADDRESS -1 : 0] i_rs_if_id          ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_rt_if_id          ,
+    input  wire [NB_REG_ADDRESS -1 : 0] i_rt_id_ex          ,
+    input  wire                         i_jump_branch       ,
+    input  wire                         i_branch            ,
+    input  wire                         i_mem_read_id_ex
 );
 
     // --------------------------------------------------

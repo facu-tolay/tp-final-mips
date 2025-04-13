@@ -6,17 +6,17 @@ module instruction_fetch
     parameter   NB_BYTE = 8
 )
 (
-    output  [NB_DATA - 1 : 0]   o_instruction               ,
-    output  [NB_DATA - 1 : 0]   o_pc_value                  ,
-    output                      o_is_end                    ,
+    output wire [NB_DATA - 1 : 0]   o_instruction               ,
+    output wire [NB_DATA - 1 : 0]   o_pc_value                  ,
+    output wire                     o_is_end                    ,
 
-    input   [NB_DATA - 1 : 0]   i_next_pc                   ,
-    input   [NB_BYTE - 1 : 0]   i_load_program_byte         ,
-    input                       i_load_program_write_enable ,
-    input                       i_pc_reset                  ,
-    input                       i_stall                     ,
-    input                       i_reset                     ,
-    input                       i_clock
+    input  wire [NB_DATA - 1 : 0]   i_next_pc                   ,
+    input  wire [NB_BYTE - 1 : 0]   i_load_program_byte         ,
+    input  wire                     i_load_program_write_enable ,
+    input  wire                     i_pc_reset                  ,
+    input  wire                     i_stall                     ,
+    input  wire                     i_reset                     ,
+    input  wire                     i_clock
 );
 
     reg [NB_DATA -1 : 0] next_pc;
