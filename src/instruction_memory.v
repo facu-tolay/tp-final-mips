@@ -4,7 +4,7 @@ module instruction_memory
 #(
     parameter NB_DATA           = 32                        ,
     parameter NB_BYTE           = 8                         ,
-    parameter N_INSTRUCTIONS    = 64                        ,
+    parameter N_INSTRUCTIONS    = 32                        ,
     parameter N_BYTE_REGISTERS  = N_INSTRUCTIONS * 4        ,
     parameter NB_ADDRESS        = $clog2(N_BYTE_REGISTERS)
 )

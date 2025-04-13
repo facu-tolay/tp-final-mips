@@ -70,17 +70,18 @@ module instruction_decode
     wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_a;
     wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_b;
 
-    mux
-    #(
-        .BITS_ENABLES       (1                      ),
-        .BUS_SIZE           (NB_DATA                )
-    )
-    u_mux_de_dato_o_pc
-    (
-        .i_en               (i_jump_o_branch                                                        ),
-        .i_data             ({i_dato_nuevo_pc,salida_de_forwarding_dato_a}                          ),
-        .o_data             (o_dato_ra                                                              )
-    );
+    assign o_dato_ra = i_jump_o_branch ? i_dato_nuevo_pc : salida_de_forwarding_dato_a;
+    // mux
+    // #(
+    //     .BITS_ENABLES       (1                      ),
+    //     .BUS_SIZE           (NB_DATA                )
+    // )
+    // u_mux_de_dato_o_pc
+    // (
+    //     .i_en               (i_jump_o_branch                                                        ),
+    //     .i_data             ({i_dato_nuevo_pc,salida_de_forwarding_dato_a}                          ),
+    //     .o_data             (o_dato_ra                                                              )
+    // );
 
      mux
      #(

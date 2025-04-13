@@ -19,18 +19,18 @@ module write_back
     output [NB_REG_ADDRESS  -1 : 0] o_direccion
 );
 
-    assign o_dato = i_dato_de_mem;
-
-    mux
-    #(
-        .BITS_ENABLES   (1                      ),
-        .BUS_SIZE       (NB_REG_ADDRESS         )
-    )
-    u_mux_de_direc_o_gprx
-    (
-        .i_en           (i_j_return_dest        ),
-        .i_data         ({5'd31,i_direc_reg}    ),
-        .o_data         (o_direccion            )
-    );
+    assign o_direccion = i_j_return_dest ? 5'd31 : i_direc_reg;
+    assign o_dato      = i_dato_de_mem;
+    // mux
+    // #(
+    //     .BITS_ENABLES   (1                      ),
+    //     .BUS_SIZE       (NB_REG_ADDRESS         )
+    // )
+    // u_mux_de_direc_o_gprx
+    // (
+    //     .i_en           (i_j_return_dest        ),
+    //     .i_data         ({5'd31,i_direc_reg}    ),
+    //     .o_data         (o_direccion            )
+    // );
 
 endmodule

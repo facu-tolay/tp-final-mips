@@ -53,18 +53,19 @@ module mips
     /*====================================== Instruction fetch  =============================*/
     wire    [NB_DATA -1:0]              instruction;
     wire    [NB_DATA -1:0]              pc_value;
+    wire                                mux_eq_neq;
     /*====================================== Latch IF/ID        =============================*/
     wire    [NB_DATA  * 2 - 1:0]        de_if_a_id;
     /*====================================== MUXES IF/ID        =============================*/
     wire    [NB_DATA -1:0]              next_pc;
-    wire    [NB_DATA -1:0]              o_mux_dir;
-    wire    [NB_DATA -1:0]              o_mux_pc_immediate;
+    wire    [NB_DATA -1:0]              mux_dir;
+    wire    [NB_DATA -1:0]              mux_pc_immediate;
     /*====================================== Sumador IMMEDIATE  =============================*/
     wire    [NB_DATA -1:0]              immediate_suma_result;
     /*====================================== Sumador PC         =============================*/
     wire    [NB_DATA -1:0]              pc_suma_result;
     /*====================================== Control Unit       =============================*/
-    wire    [NB_SIGNALS-1:0]            o_signals;
+    wire    [NB_SIGNALS-1:0]            control_signals;
     /*====================================== Instruction Decode =============================*/
     wire    [NB_DATA -1:0]              o_dato_ra_para_condicion;
     wire    [NB_DATA -1:0]              o_dato_rb_para_condicion;
@@ -152,55 +153,59 @@ module mips
     // --------------------------------------------------
     // Interstage muxes IF/ID
     // --------------------------------------------------
-    mux
-    #(
-        .BITS_ENABLES(1),
-        .BUS_SIZE(NB_DATA)
-    )
-    mux_jmp_brch
-    (
-        .i_en       (o_signals[JMP_OR_BRCH]             ),
-        .i_data     ({o_mux_dir, o_mux_pc_immediate}    ), // FIXME pasar a una expresion wire y assign
-        .o_data     (next_pc                            )
-    );
+    assign next_pc = control_signals[JMP_OR_BRCH] ? mux_dir : mux_pc_immediate;
+    // mux
+    // #(
+    //     .BITS_ENABLES(1),
+    //     .BUS_SIZE(NB_DATA)
+    // )
+    // mux_jmp_brch
+    // (
+    //     .i_en       (control_signals[JMP_OR_BRCH]             ),
+    //     .i_data     ({mux_dir, mux_pc_immediate}    ), // FIXME pasar a una expresion wire y assign
+    //     .o_data     (next_pc                            )
+    // );
 
-    mux
-    #(
-        .BITS_ENABLES(1),
-        .BUS_SIZE(NB_DATA)
-    )
-    mux_dir
-    (
-        .i_en       (o_signals[JMP_SRC]                                         ),
-        .i_data     ({{6'b0,o_dato_direc_jump} << 2 , o_dato_ra_para_condicion} ), // FIXME pasar a una expresion wire y assign
-        .o_data     (o_mux_dir                                                  )
-    );
+    assign mux_dir = control_signals[JMP_SRC] ? {6'b0,o_dato_direc_jump} << 2 : o_dato_ra_para_condicion;
+    // mux
+    // #(
+    //     .BITS_ENABLES(1),
+    //     .BUS_SIZE(NB_DATA)
+    // )
+    // mux_dir
+    // (
+    //     .i_en       (control_signals[JMP_SRC]                                         ),
+    //     .i_data     ({{6'b0,o_dato_direc_jump} << 2 , o_dato_ra_para_condicion} ), // FIXME pasar a una expresion wire y assign
+    //     .o_data     (mux_dir                                                  )
+    // );
 
-    mux
-    #(
-        .BITS_ENABLES(1),
-        .BUS_SIZE(NB_DATA)
-    )
-    mux_pc_immediate
-    (
-        .i_en       (enable_mux_pc_immediate                    ),
-        .i_data     ({immediate_suma_result, pc_suma_result}    ), // FIXME pasar a una expresion wire y assign
-        .o_data     (o_mux_pc_immediate                         )
-    );
+    assign enable_mux_pc_immediate = mux_eq_neq && control_signals[BRANCH];
+    assign mux_pc_immediate        = enable_mux_pc_immediate ? immediate_suma_result : pc_suma_result;
+    // mux
+    // #(
+    //     .BITS_ENABLES(1),
+    //     .BUS_SIZE(NB_DATA)
+    // )
+    // mux_pc_immediate
+    // (
+    //     .i_en       (enable_mux_pc_immediate                    ),
+    //     .i_data     ({immediate_suma_result, pc_suma_result}    ), // FIXME pasar a una expresion wire y assign
+    //     .o_data     (mux_pc_immediate                         )
+    // );
 
-    assign enable_mux_pc_immediate = o_mux_eq_neq && o_signals[BRANCH];
 
-    mux
-    #(
-        .BITS_ENABLES(1),
-        .BUS_SIZE(1)
-    )
-    mux_eq_neq
-    (
-        .i_en       (o_signals[EQ_OR_NEQ]       ),
-        .i_data     ({i_eq_neq, ~i_eq_neq}      ), // FIXME pasar a una expresion wire y assign
-        .o_data     (o_mux_eq_neq               )
-    );
+    assign mux_eq_neq = control_signals[EQ_OR_NEQ] ? i_eq_neq : ~i_eq_neq;
+    // mux
+    // #(
+    //     .BITS_ENABLES(1),
+    //     .BUS_SIZE(1)
+    // )
+    // mux_eq_neq
+    // (
+    //     .i_en       (control_signals[EQ_OR_NEQ]       ),
+    //     .i_data     ({i_eq_neq, ~i_eq_neq}      ), // FIXME pasar a una expresion wire y assign
+    //     .o_data     (mux_eq_neq               )
+    // );
 
     assign i_eq_neq = o_dato_ra_para_condicion != o_dato_rb_para_condicion;
 
@@ -214,7 +219,7 @@ module mips
     // --------------------------------------------------
     hazard_unit u_hazard_unit
     (
-        .i_jump_branch      (o_signals[JMP_OR_BRCH]     ),
+        .i_jump_branch      (control_signals[JMP_OR_BRCH]     ),
         .i_branch           (enable_mux_pc_immediate    ),
         .i_mem_read_id_ex   (de_id_a_ex[4]              ), // FIXME pasar a una expresion wire y assign
         .i_rs_if_id         (o_direccion_rs             ),
@@ -233,7 +238,7 @@ module mips
         .i_function         (de_if_a_id[37 : 32]    ), // FIXME pasar a una expresion wire y assign
         .i_operation        (o_campo_op             ),
         .i_enable_control   (stall_ctl              ),
-        .o_control          (o_signals              )
+        .o_control          (control_signals              )
     );
 
     // --------------------------------------------------
@@ -291,7 +296,7 @@ module mips
         .o_campo_op                     (o_campo_op                 ),
 
         // Flags de control
-        .i_jump_o_branch                (o_signals[JMP_OR_BRCH]     )
+        .i_jump_o_branch                (control_signals[JMP_OR_BRCH]     )
     );
 
     // --------------------------------------------------
@@ -307,10 +312,10 @@ module mips
         .i_reset        (i_reset || i_pc_reset          ),
         .i_enable       (i_enable_stages_transitions[2] ),
         .i_data         ({o_direccion_rd, o_direccion_rt,o_dato_inmediato, o_dato_rb,   // FIXME pasar a una expresion wire y assign
-                          o_dato_ra, o_signals[REG_DST], o_signals[ALU_SRC], o_signals[OP2:OP0],
-                          o_signals[SHIFT_SRC], o_signals[DATA_MASK_1:DATA_MASK_0],
-                          o_signals[MEM_WRITE], o_signals[MEM_READ]  , o_signals[IS_UNSIGNED],
-                          o_signals[REG_WRITE], o_signals[MEM_TO_REG], o_signals[J_RETURN_DST]}),
+                          o_dato_ra, control_signals[REG_DST], control_signals[ALU_SRC], control_signals[OP2:OP0],
+                          control_signals[SHIFT_SRC], control_signals[DATA_MASK_1:DATA_MASK_0],
+                          control_signals[MEM_WRITE], control_signals[MEM_READ]  , control_signals[IS_UNSIGNED],
+                          control_signals[REG_WRITE], control_signals[MEM_TO_REG], control_signals[J_RETURN_DST]}),
         .o_data         (de_id_a_ex                     )
     );
 

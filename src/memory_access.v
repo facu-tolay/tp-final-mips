@@ -8,17 +8,17 @@ module memory_access
     parameter NUM_DIREC = 7
 )
 (
-    input                       i_clock,
-    input                       i_reset,
-    input                       i_wr_mem,
-    input                       i_is_unsigned,
-    input                       i_mem_to_reg,
-    input  [TAM_MASK    -1 : 0] i_data_mask,
-    input  [TAM_DATA    -1 : 0] i_direc_mem,
-    input  [TAM_DATA    -1 : 0] i_data,
-    input  [NUM_DIREC   -1 : 0] i_debug_pointer,
-    output [TAM_DATA    -1 : 0] o_debug_read,
-    output [TAM_DATA    -1 : 0] o_data
+    input  wire                      i_clock,
+    input  wire                      i_reset,
+    input  wire                      i_wr_mem,
+    input  wire                      i_is_unsigned,
+    input  wire                      i_mem_to_reg,
+    input  wire [TAM_MASK    -1 : 0] i_data_mask,
+    input  wire [TAM_DATA    -1 : 0] i_direc_mem,
+    input  wire [TAM_DATA    -1 : 0] i_data,
+    input  wire [NUM_DIREC   -1 : 0] i_debug_pointer,
+    output wire [TAM_DATA    -1 : 0] o_debug_read,
+    output wire [TAM_DATA    -1 : 0] o_data
 );
 
     wire [NUM_BYTES -1 : 0] bits_de_mascara_a_memoria;
@@ -62,16 +62,17 @@ module memory_access
     // --------------------------------------------------
     // Write data to register selection
     // --------------------------------------------------
-    mux
-    #(
-        .BITS_ENABLES       (1                              ),
-        .BUS_SIZE           (TAM_DATA                       )
-    )
-    u_mux_de_mem_o_reg
-    (
-        .i_en               (i_mem_to_reg                   ),
-        .i_data             ({dato_signado,i_direc_mem}     ),
-        .o_data             (o_data                         )
-    );
+    assign o_data = i_mem_to_reg ? dato_signado : i_direc_mem; // FIXME
+    // mux
+    // #(
+    //     .BITS_ENABLES       (1                              ),
+    //     .BUS_SIZE           (TAM_DATA                       )
+    // )
+    // u_mux_de_mem_o_reg
+    // (
+    //     .i_en               (i_mem_to_reg                   ),
+    //     .i_data             ({dato_signado,i_direc_mem}     ),
+    //     .o_data             (o_data                         )
+    // );
 
 endmodule

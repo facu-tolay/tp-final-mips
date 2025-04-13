@@ -19,10 +19,10 @@ module signator // FIXME cambiar nombre
     // --------------------------------------------------
     // FIXME hacer un case
     always@(*) begin
-        if(i_mascara == 2'b01 && (~i_is_unsigned)) begin
+        if(i_mascara == 2'b01 && ~i_is_unsigned) begin
             reg_data_out = (i_dato[15] == 1) ? {16'b1111111111111111        , i_dato[15:0]} : {16'b0, i_dato[15:0]};
         end
-        else if(i_mascara == 2'b00 && (~i_is_unsigned)) begin
+        else if(i_mascara == 2'b00 && ~i_is_unsigned) begin
             reg_data_out = (i_dato[ 7] == 1) ? {24'b111111111111111111111111, i_dato[7:0] } : {24'b0, i_dato[7:0] };
         end
         else begin

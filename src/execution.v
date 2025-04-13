@@ -29,13 +29,13 @@ module execution
     // --------------------------------------------------
     // Destination register selection
     // --------------------------------------------------
-    assign o_register_address = i_register_destination ? i_rt_address : i_rd_address; // FIXME probar
+    assign o_register_address = i_register_destination ? i_rt_address : i_rd_address;
 
     // --------------------------------------------------
     // A/B data selection
     // --------------------------------------------------
-    assign alu_data_select_a = i_shift_source ? {27'b0, i_sign_extender_data[10 : 6]} : i_ra_data; // FIXME probar
-    assign alu_data_select_b = i_alu_source ? i_sign_extender_data : i_rb_data; // FIXME probar
+    assign alu_data_select_a = i_shift_source ? {27'b0, i_sign_extender_data[10 : 6]} : i_ra_data;
+    assign alu_data_select_b = i_alu_source   ? i_sign_extender_data                  : i_rb_data;
 
     // --------------------------------------------------
     // ALU control block
