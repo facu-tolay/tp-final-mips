@@ -118,7 +118,7 @@ module mips
     // --------------------------------------------------
     // Next PC adder
     // --------------------------------------------------
-    assign pc_suma_result = pc_value + $signed(32'h4); // FIXME probar sin signado
+    assign pc_suma_result = pc_value + 32'h4;
 
     // --------------------------------------------------
     // Interstage registers IF/ID

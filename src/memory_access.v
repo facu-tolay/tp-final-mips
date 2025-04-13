@@ -62,17 +62,6 @@ module memory_access
     // --------------------------------------------------
     // Write data to register selection
     // --------------------------------------------------
-    assign o_data = i_mem_to_reg ? dato_signado : i_direc_mem; // FIXME
-    // mux
-    // #(
-    //     .BITS_ENABLES       (1                              ),
-    //     .BUS_SIZE           (TAM_DATA                       )
-    // )
-    // u_mux_de_mem_o_reg
-    // (
-    //     .i_en               (i_mem_to_reg                   ),
-    //     .i_data             ({dato_signado,i_direc_mem}     ),
-    //     .o_data             (o_data                         )
-    // );
+    assign o_data = i_mem_to_reg ? dato_signado : i_direc_mem;
 
 endmodule
