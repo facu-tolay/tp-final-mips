@@ -8,7 +8,7 @@ module memory_access
     parameter NUM_DIREC = 7
 )
 (
-    input                       i_clk,
+    input                       i_clock,
     input                       i_reset,
     input                       i_wr_mem,
     input                       i_is_unsigned,
@@ -38,7 +38,7 @@ module memory_access
     // data_memory u_data_memory // FIXME probarrr
     memoria_por_byte u_data_memory
     (
-        .i_clock            (i_clk                          ),
+        .i_clock            (i_clock                        ),
         .i_reset            (i_reset                        ),
         .i_write_enable     (i_wr_mem                       ),
         .i_byte_enb         (bits_de_mascara_a_memoria      ), //es una entrada, indicamos que bytes queremos

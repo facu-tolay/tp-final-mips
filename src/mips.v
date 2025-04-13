@@ -29,8 +29,8 @@ module mips
     input                                   i_clock
 );
 
-    //  17	    16	    15	      14	 13	     12   11	10	  9	      8	      7	      6	       5	    4	     3	       2	      1        0
-    //RegDst MemToReg MemRead	Branch MemWrite	Ope2 Ope1 Ope0 ALUSrc RegWrite ShiftSrc JmpSrc JReturnDst EQorNE DataMask1 DataMask0 IsUnsigned JmpOrBrch
+    //  17      16      15        14     13      12   11    10    9       8       7       6        5        4        3         2          1        0
+    //RegDst MemToReg MemRead   Branch MemWrite Ope2 Ope1 Ope0 ALUSrc RegWrite ShiftSrc JmpSrc JReturnDst EQorNE DataMask1 DataMask0 IsUnsigned JmpOrBrch
     localparam  REG_DST         =   17;
     localparam  MEM_TO_REG      =   16;
     localparam  MEM_READ        =   15;
@@ -56,7 +56,7 @@ module mips
     /*====================================== Latch IF/ID        =============================*/
     wire    [NB_DATA  * 2 - 1:0]        de_if_a_id;
     /*====================================== MUXES IF/ID        =============================*/
-    wire    [NB_DATA -1:0]              new_pc;
+    wire    [NB_DATA -1:0]              next_pc;
     wire    [NB_DATA -1:0]              o_mux_dir;
     wire    [NB_DATA -1:0]              o_mux_pc_immediate;
     /*====================================== Sumador IMMEDIATE  =============================*/
@@ -81,7 +81,7 @@ module mips
     wire    [120-1:0]                   de_id_a_ex;
     /*====================================== Excecution         =============================*/
     wire    [NB_DATA -1:0]              o_mem_data;
-    wire    [NB_DATA -1:0]              o_alu_data;
+    wire    [NB_DATA -1:0]              alu_result;
     wire    [NB_REG_ADDRESS-1:0]        o_reg_address;
     /*====================================== Latch EX/MEM       =============================*/
     wire    [76-1:0]                    de_ex_a_mem;
@@ -95,11 +95,6 @@ module mips
 
 
     // --------------------------------------------------
-    // Next PC adder
-    // --------------------------------------------------
-    assign pc_suma_result = pc_value + $signed(32'h4); // FIXME probar sin signado
-
-    // --------------------------------------------------
     // Instruction Fetch stage
     // --------------------------------------------------
     instruction_fetch u_instruction_fetch
@@ -110,14 +105,19 @@ module mips
 
         .i_pc_reset                 (i_pc_reset                     ),
         .i_stall                    (i_enable_stages_transitions[4] && stall_latch ),
-        .i_new_pc                   (new_pc                         ),
-        .i_bootloader_write_enable  (i_load_program_write_enable    ),
-        .i_byte_de_bootloader       (i_load_program_byte            ),
+        .i_next_pc                  (next_pc                        ),
+        .i_load_program_write_enable(i_load_program_write_enable    ),
+        .i_load_program_byte        (i_load_program_byte            ),
         .i_reset                    (i_reset || i_delete_program    ),
-        .i_clk                      (i_clock                        )
+        .i_clock                    (i_clock                        )
     );
 
     assign o_debug_read_pc = pc_value;
+
+    // --------------------------------------------------
+    // Next PC adder
+    // --------------------------------------------------
+    assign pc_suma_result = pc_value + $signed(32'h4); // FIXME probar sin signado
 
     // --------------------------------------------------
     // Interstage registers IF/ID
@@ -161,7 +161,7 @@ module mips
     (
         .i_en       (o_signals[JMP_OR_BRCH]             ),
         .i_data     ({o_mux_dir, o_mux_pc_immediate}    ), // FIXME pasar a una expresion wire y assign
-        .o_data     (new_pc                             )
+        .o_data     (next_pc                            )
     );
 
     mux
@@ -207,28 +207,28 @@ module mips
     // --------------------------------------------------
     // Sumador IF
     // --------------------------------------------------
-    assign immediate_suma_result = de_if_a_id[31:0] + $signed(o_dato_direc_branch<<2);
+    assign immediate_suma_result = de_if_a_id[31 : 0] + $signed(o_dato_direc_branch << 2);
 
     // --------------------------------------------------
     // Hazard unit
     // --------------------------------------------------
     hazard_unit u_hazard_unit
     (
-        .i_jmp_brch         (o_signals[JMP_OR_BRCH]     ),
-        .i_brch             (enable_mux_pc_immediate    ),
+        .i_jump_branch      (o_signals[JMP_OR_BRCH]     ),
+        .i_branch           (enable_mux_pc_immediate    ),
         .i_mem_read_id_ex   (de_id_a_ex[4]              ), // FIXME pasar a una expresion wire y assign
         .i_rs_if_id         (o_direccion_rs             ),
         .i_rt_if_id         (o_direccion_rt             ),
         .i_rt_id_ex         (de_id_a_ex[114 : 110]      ), // FIXME pasar a una expresion wire y assign
-        .o_latch_en         (stall_latch                ),
         .o_if_flush         (if_flush                   ),
-        .o_risk_detected    (stall_ctl                  )
+        .o_risk_detected    (stall_ctl                  ),
+        .o_no_risk_detected (stall_latch                )
     );
 
     // --------------------------------------------------
     // Control unit
     // --------------------------------------------------
-    mod_control u_control_unit
+    control_unit u_control_unit
     (
         .i_function         (de_if_a_id[37 : 32]    ), // FIXME pasar a una expresion wire y assign
         .i_operation        (o_campo_op             ),
@@ -254,7 +254,7 @@ module mips
         .i_direc_rd_id_ex               (o_reg_address              ),
         .i_direc_rd_ex_mem              (de_ex_a_mem[75:71]         ), // FIXME pasar a una expresion wire y assign
         .i_direc_rd_mem_wb              (direccion_de_wb            ),
-        .i_dato_de_id_ex                (o_alu_data                 ),
+        .i_dato_de_id_ex                (alu_result                 ),
         .i_dato_de_ex_mem               (o_data_salida_de_memoria   ),
         .i_dato_de_mem_wb               (dato_salido_wb             ),
 
@@ -330,7 +330,7 @@ module mips
         .i_rd_address           (de_id_a_ex[119 : 115]  ), // FIXME pasar a una expresion wire y assign
         .o_reg_address          (o_reg_address          ),
         .o_mem_data             (o_mem_data             ),
-        .o_alu_data             (o_alu_data             )
+        .o_alu_data             (alu_result             )
     );
 
     // --------------------------------------------------
@@ -345,7 +345,7 @@ module mips
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
         .i_enable   (i_enable_stages_transitions[1] ),
-        .i_data     ({o_reg_address, o_mem_data, o_alu_data, de_id_a_ex[7:5], de_id_a_ex[3:0]}), // FIXME pasar a una expresion wire y assign
+        .i_data     ({o_reg_address, o_mem_data, alu_result, de_id_a_ex[7:5], de_id_a_ex[3:0]}), // FIXME pasar a una expresion wire y assign
         .o_data     (de_ex_a_mem                    )
     );
 
@@ -354,7 +354,7 @@ module mips
     // --------------------------------------------------
     memory_access MEM
     (
-        .i_clk              (i_clock                  ),
+        .i_clock            (i_clock                  ),
         .i_reset            (i_reset|| i_pc_reset     ),
         .i_wr_mem           (de_ex_a_mem[4]           ), // FIXME pasar a una expresion wire y assign
         .i_is_unsigned      (de_ex_a_mem[3]           ), // FIXME pasar a una expresion wire y assign
