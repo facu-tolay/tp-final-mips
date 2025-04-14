@@ -246,7 +246,7 @@ module mips
         .o_campo_op                     (o_campo_op                 ),
 
         // Flags de control
-        .i_jump_o_branch                (control_signals[JMP_OR_BRCH]     )
+        .i_jump_o_branch                (control_signals[JMP_OR_BRCH]   )
     );
 
     // --------------------------------------------------
@@ -309,17 +309,20 @@ module mips
     // --------------------------------------------------
     memory_access u_memory_access
     (
-        .i_clock            (i_clock                  ),
-        .i_reset            (i_reset|| i_pc_reset     ),
-        .i_wr_mem           (de_ex_a_mem[4]           ), // FIXME pasar a una expresion wire y assign
-        .i_is_unsigned      (de_ex_a_mem[3]           ), // FIXME pasar a una expresion wire y assign
-        .i_mem_to_reg       (de_ex_a_mem[1]           ), // FIXME pasar a una expresion wire y assign
-        .i_data_mask        (de_ex_a_mem[6:5]         ), // FIXME pasar a una expresion wire y assign
-        .i_direc_mem        (de_ex_a_mem[38:7]        ), // FIXME pasar a una expresion wire y assign
-        .i_data             (de_ex_a_mem[70:39]       ), // FIXME pasar a una expresion wire y assign
-        .i_debug_pointer    (i_debug_read_mem_address ),
-        .o_debug_read       (o_debug_read_mem         ),
-        .o_data             (o_data_salida_de_memoria )
+        .i_data_write               (de_ex_a_mem[70:39]       ), // FIXME pasar a una expresion wire y assign
+        .i_data_mask                (de_ex_a_mem[6:5]         ), // FIXME pasar a una expresion wire y assign
+        .i_memory_to_register       (de_ex_a_mem[1]           ), // FIXME pasar a una expresion wire y assign
+        .i_is_unsigned              (de_ex_a_mem[3]           ), // FIXME pasar a una expresion wire y assign
+        .i_write_enable             (de_ex_a_mem[4]           ), // FIXME pasar a una expresion wire y assign
+
+        .i_memory_address           (de_ex_a_mem[38:7]        ), // FIXME pasar a una expresion wire y assign
+        .o_data                     (o_data_salida_de_memoria ),
+
+        .i_debug_read_mem_address   (i_debug_read_mem_address ),
+        .o_debug_read_mem           (o_debug_read_mem         ),
+
+        .i_reset                    (i_reset|| i_pc_reset     ),
+        .i_clock                    (i_clock                  )
     );
 
     // --------------------------------------------------

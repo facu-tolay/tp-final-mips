@@ -10,17 +10,17 @@ module memory_access
     parameter NB_MEM_ADDRESS    = 7
 )
 (
-    output wire [NB_DATA        -1 : 0] o_data         ,
-    output wire [NB_DATA        -1 : 0] o_debug_read   ,
+    output wire [NB_DATA        -1 : 0] o_data                      ,
+    output wire [NB_DATA        -1 : 0] o_debug_read_mem            ,
 
-    input  wire [NB_DATA        -1 : 0] i_data         ,
-    input  wire [NB_MASK        -1 : 0] i_data_mask    ,
-    input  wire [NB_DATA        -1 : 0] i_direc_mem    ,
-    input  wire [NB_MEM_ADDRESS -1 : 0] i_debug_pointer,
-    input  wire                         i_wr_mem       ,
-    input  wire                         i_is_unsigned  ,
-    input  wire                         i_mem_to_reg   ,
-    input  wire                         i_reset        ,
+    input  wire [NB_DATA        -1 : 0] i_data_write                ,
+    input  wire [NB_MASK        -1 : 0] i_data_mask                 ,
+    input  wire [NB_DATA        -1 : 0] i_memory_address            ,
+    input  wire [NB_MEM_ADDRESS -1 : 0] i_debug_read_mem_address    ,
+    input  wire                         i_write_enable              ,
+    input  wire                         i_is_unsigned               ,
+    input  wire                         i_memory_to_register        ,
+    input  wire                         i_reset                     ,
     input  wire                         i_clock
 );
 
@@ -40,27 +40,22 @@ module memory_access
     // --------------------------------------------------
     data_memory u_data_memory
     (
-        .i_clock            (i_clock                ),
-        .i_reset            (i_reset                ),
-        .i_write_enable     (i_wr_mem               ),
-        .i_byte_enb         (memory_mask_bits       ), // indicates which bytes to select
-        .i_direcc           (i_direc_mem            ),
-        .i_data             (i_data                 ),
-        .i_direcc_debug     (i_debug_pointer        ),
-        .o_data_debug       (o_debug_read           ),
-        .o_data             (data_to_sign           )
+        .i_data_write               (i_data_write               ),
+        .i_write_enable             (i_write_enable             ),
+        .i_byte_mask                (memory_mask_bits           ), // indicates which bytes to select
+        .i_address                  (i_memory_address           ),
+        .o_data_read                (data_to_sign               ),
+
+        .i_debug_read_mem_address   (i_debug_read_mem_address   ),
+        .o_debug_read_mem           (o_debug_read_mem           ),
+
+        .i_reset                    (i_reset                    ),
+        .i_clock                    (i_clock                    )
     );
 
     // --------------------------------------------------
     // Sign extender for memory data
     // --------------------------------------------------
-    // signator u_signator
-    // (
-    //     .i_is_unsigned      (i_is_unsigned                  ),
-    //     .i_mascara          (i_data_mask                    ),
-    //     .i_dato             (data_to_sign     ), //toma como entrada la salida de la mascarita
-    //     .o_dato             (signed_data                    )
-    // );
     always @(*) begin
         casez ({i_data_mask, i_is_unsigned})
             3'b01_0: signed_data = {{NB_HALFWORD     {data_to_sign[NB_HALFWORD-1]}}, data_to_sign[NB_HALFWORD-1 : 0]}; // Extensión de signo para 16 bits
@@ -72,6 +67,6 @@ module memory_access
     // --------------------------------------------------
     // Write data to register selection
     // --------------------------------------------------
-    assign o_data = i_mem_to_reg ? signed_data : i_direc_mem;
+    assign o_data = i_memory_to_register ? signed_data : i_memory_address;
 
 endmodule
