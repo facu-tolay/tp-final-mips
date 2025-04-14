@@ -125,10 +125,15 @@ def testcase_all():
                       testcase_ggg_asm,
                       testcase_hhh_asm]
 
+    start_time = time.time()
+
     for testcase in test_functions:
         print(f"Running test < {testcase.__name__} >")
         regresion_result = regresion_result and testcase()
         time.sleep(0.5)
 
+    end_time = time.time()
+
     print(f"Regress successful ? {bcolors.OKGREEN if regresion_result==True else bcolors.FAIL} {regresion_result} {bcolors.ENDC}")
+    print(f"Took {end_time - start_time} seconds")
     return regresion_result
