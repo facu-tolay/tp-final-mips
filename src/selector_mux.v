@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module mux
+module selector_mux
 #(
     parameter BITS_ENABLES  = 2                 ,
     parameter BUS_SIZE      = 8                 ,

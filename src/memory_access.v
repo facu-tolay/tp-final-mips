@@ -43,7 +43,7 @@ module memory_access
         .i_data_write               (i_data_write               ),
         .i_write_enable             (i_write_enable             ),
         .i_byte_mask                (memory_mask_bits           ), // indicates which bytes to select
-        .i_address                  (i_memory_address           ),
+        .i_address                  (i_memory_address           ), // FIXME checkear tamanios
         .o_data_read                (data_to_sign               ),
 
         .i_debug_read_mem_address   (i_debug_read_mem_address   ),

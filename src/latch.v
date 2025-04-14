@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module latch
+module latch // FIXME cambiar nombre
 #(
     parameter BUS_DATA = 8
 )

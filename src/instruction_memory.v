@@ -6,7 +6,7 @@ module instruction_memory
     parameter NB_BYTE           = 8                         ,
     parameter N_INSTRUCTIONS    = 32                        ,
     parameter N_BYTE_REGISTERS  = N_INSTRUCTIONS * 4        ,
-    parameter NB_ADDRESS        = $clog2(N_BYTE_REGISTERS)
+    parameter NB_ADDRESS        = 7
 )
 (
     output wire [NB_DATA    -1 : 0]     o_read_instruction          ,

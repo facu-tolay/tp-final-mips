@@ -11,7 +11,7 @@ module instruction_decode
 )
 (
     //Intruccion
-    input  wire [NB_DATA        -1 : 0] i_instruccion                   ,
+    input  wire [NB_DATA        -1 : 0] i_instruction                   , // DONE
 
     // Cortocircuito
     input  wire                         i_reg_write_id_ex               ,
@@ -25,77 +25,74 @@ module instruction_decode
     input  wire [NB_DATA        -1 : 0] i_dato_de_mem_wb                ,
 
     //Al registro
-    input  wire [NB_DATA        -1 : 0] i_dato_de_escritura_en_reg      ,
-    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_de_escritura_en_reg     ,
+    input  wire [NB_DATA        -1 : 0] i_write_reg_data                , // DONE
+    input  wire [NB_REG_ADDRESS -1 : 0] i_write_reg_address             , // DONE
 
-    // Para Debug
-    output wire [NB_DATA        -1 : 0] o_dato_a_debug                  ,
-    input  wire [NB_REG_ADDRESS -1 : 0] i_direc_de_lectura_de_debug     ,
+    // Debug
+    output wire [NB_DATA        -1 : 0] o_debug_read_reg                , // DONE
+    input  wire [NB_REG_ADDRESS -1 : 0] i_debug_read_reg_address        , // DONE
 
-    // Para comparar salto
-    output wire [NB_DATA        -1 : 0] o_dato_ra_para_condicion        ,
-    output wire [NB_DATA        -1 : 0] o_dato_rb_para_condicion        ,
+    // EQ/NEQ condition for jump or branch
+    output wire [NB_DATA        -1 : 0] o_data_a_for_condition          , // DONE
+    output wire [NB_DATA        -1 : 0] o_data_b_for_condition          , // DONE
 
-    //Para Branch
-    output wire [NB_DATA        -1 : 0] o_dato_direc_branch             ,
+    // Jump and branch addresses
+    output wire [NB_DATA        -1 : 0] o_data_branch_address           , // DONE
+    output wire [NB_JUMP_ADDRESS-1 : 0] o_data_jump_address             , // DONE
 
-    //Para Jump
-    output wire [NB_JUMP_ADDRESS-1 : 0] o_dato_direc_jump               ,
+    // For return address
+    input  wire [NB_DATA        -1 : 0] i_next_pc                       , // DONE
 
-    // Para direccion de retorno
-    input  wire [NB_DATA        -1 : 0] i_dato_nuevo_pc                 ,
+    //Data
+    output wire [NB_DATA        -1 : 0] o_data_ra                       , // DONE
+    output wire [NB_DATA        -1 : 0] o_data_rb                       , // DONE
+    output wire [NB_DATA        -1 : 0] o_data_immediate_signed         , // DONE
+    output wire [NB_REG_ADDRESS -1 : 0] o_reg_select_address_rs         , // DONE
+    output wire [NB_REG_ADDRESS -1 : 0] o_reg_select_address_rt         , // DONE
+    output wire [NB_REG_ADDRESS -1 : 0] o_reg_select_address_rd         , // DONE
 
-    //Datos
-    output wire [NB_DATA        -1 : 0] o_dato_ra                       ,
-    output wire [NB_DATA        -1 : 0] o_dato_rb                       ,
-    output wire [NB_DATA        -1 : 0] o_dato_inmediato                ,
-    
-    output wire [NB_REG_ADDRESS -1 : 0] o_direccion_rs                  ,
-    output wire [NB_REG_ADDRESS -1 : 0] o_direccion_rt                  ,
-    output wire [NB_REG_ADDRESS -1 : 0] o_direccion_rd                  ,
-
-    // A control
-    output wire [NB_OP_FIELD    -1 : 0] o_campo_op                      ,
-
-    // Flags de control
-    input  wire                         i_jump_o_branch                 ,
+    // Control signals
+    output wire [NB_OP_FIELD    -1 : 0] o_control_unit_operation        , // DONE
+    input  wire                         i_jump_or_branch                , // DONE
 
     input  wire                         i_reset                         ,
     input  wire                         i_clock
 );
 
-    wire  [NB_DATA              -1 : 0] salida_de_forwarding_dato_a;
-    wire  [NB_DATA              -1 : 0] salida_del_ra;
-    wire  [NB_DATA              -1 : 0] salida_del_rb;
-    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_a;
-    wire  [NB_FORWARDING_ENABLE -1 : 0] bits_de_forward_b;
-    wire                                is_number_negative;
+    wire  [NB_DATA              -1 : 0] data_immediate_signed;
+    wire  [NB_DATA              -1 : 0] forwarding_reg_data_a;
+    wire  [NB_DATA              -1 : 0] forwarding_reg_data_b;
+    wire  [NB_DATA              -1 : 0] read_reg_data_a;
+    wire  [NB_DATA              -1 : 0] read_reg_data_b;
+    wire  [NB_FORWARDING_ENABLE -1 : 0] forward_select_bits_a;
+    wire  [NB_FORWARDING_ENABLE -1 : 0] forward_select_bits_b;
+    wire                                is_immediate_number_negative;
 
     // --------------------------------------------------
-    // A/B forwarding selection
+    // A/B forwarding data selection
     // --------------------------------------------------
-    mux
+    selector_mux
     #(
         .BITS_ENABLES       (NB_FORWARDING_ENABLE   ),
         .BUS_SIZE           (NB_DATA                )
     )
-    u_mux_de_forward_para_dato_a
+    u_select_forward_data_a
      (
-        .i_en               (bits_de_forward_a                                                      ),
-        .i_data             ({i_dato_de_id_ex, i_dato_de_mem_wb, i_dato_de_ex_mem,salida_del_ra}    ),
-        .o_data             (salida_de_forwarding_dato_a                                            )
+        .i_en               (forward_select_bits_a                                                  ),
+        .i_data             ({i_dato_de_id_ex, i_dato_de_mem_wb, i_dato_de_ex_mem, read_reg_data_a} ),
+        .o_data             (forwarding_reg_data_a                                                  )
     );
 
-    mux
+    selector_mux
     #(
         .BITS_ENABLES       (NB_FORWARDING_ENABLE   ),
         .BUS_SIZE           (NB_DATA                )
     )
-    u_mux_de_forward_para_dato_b
+    u_select_forward_data_b
     (
-        .i_en               (bits_de_forward_b                                                      ),
-        .i_data             ({i_dato_de_id_ex, i_dato_de_mem_wb, i_dato_de_ex_mem,salida_del_rb}    ),
-        .o_data             (o_dato_rb                                                              )
+        .i_en               (forward_select_bits_b                                                  ),
+        .i_data             ({i_dato_de_id_ex, i_dato_de_mem_wb, i_dato_de_ex_mem, read_reg_data_b} ),
+        .o_data             (forwarding_reg_data_b                                                  )
     );
 
     // --------------------------------------------------
@@ -103,16 +100,16 @@ module instruction_decode
     // --------------------------------------------------
     forwarding_unit u_forwarding_unit
     (
-        .i_rs_if_id         (i_instruccion[25:21]           ),
-        .i_rt_if_id         (i_instruccion[20:16]           ),
-        .i_rd_id_ex         (i_direc_rd_id_ex               ),
-        .i_rd_ex_mem        (i_direc_rd_ex_mem              ),
-        .i_rd_mem_wb        (i_direc_rd_mem_wb              ),
-        .i_reg_wr_ex_mem    (i_reg_write_ex_mem             ),
-        .i_reg_wr_id_ex     (i_reg_write_id_ex              ),
-        .i_reg_wr_mem_wb    (i_reg_write_mem_wb             ),
-        .o_forward_a        (bits_de_forward_a              ),
-        .o_forward_b        (bits_de_forward_b              )
+        .i_rs_if_id                 (i_instruction[25:21]           ),
+        .i_rt_if_id                 (i_instruction[20:16]           ),
+        .i_rd_id_ex                 (i_direc_rd_id_ex               ),
+        .i_rd_ex_mem                (i_direc_rd_ex_mem              ),
+        .i_rd_mem_wb                (i_direc_rd_mem_wb              ),
+        .i_reg_wr_ex_mem            (i_reg_write_ex_mem             ),
+        .i_reg_wr_id_ex             (i_reg_write_id_ex              ),
+        .i_reg_wr_mem_wb            (i_reg_write_mem_wb             ),
+        .o_forward_a                (forward_select_bits_a          ),
+        .o_forward_b                (forward_select_bits_b          )
     );
 
     // --------------------------------------------------
@@ -120,16 +117,16 @@ module instruction_decode
     // --------------------------------------------------
     registers u_registers
     (
-        .o_read_reg_data_a          (salida_del_ra                  ),
-        .o_read_reg_data_b          (salida_del_rb                  ),
-        .o_read_reg_data_debug      (o_dato_a_debug                 ),
+        .o_read_reg_data_a          (read_reg_data_a                ),
+        .o_read_reg_data_b          (read_reg_data_b                ),
+        .o_read_reg_data_debug      (o_debug_read_reg               ),
 
-        .i_read_reg_address_a       (i_instruccion[25:21]           ),
-        .i_read_reg_address_b       (i_instruccion[20:16]           ),
-        .i_write_reg_data           (i_dato_de_escritura_en_reg     ),
-        .i_write_reg_address        (i_direc_de_escritura_en_reg    ),
+        .i_read_reg_address_a       (i_instruction[25:21]           ),
+        .i_read_reg_address_b       (i_instruction[20:16]           ),
+        .i_write_reg_data           (i_write_reg_data               ),
+        .i_write_reg_address        (i_write_reg_address            ),
         .i_write_reg_enable         (i_reg_write_mem_wb             ),
-        .i_read_reg_address_debug   (i_direc_de_lectura_de_debug    ),
+        .i_read_reg_address_debug   (i_debug_read_reg_address       ),
         .i_reset                    (i_reset                        ),
         .i_clock                    (i_clock                        )
     );
@@ -137,20 +134,24 @@ module instruction_decode
     // --------------------------------------------------
     // Sign extension
     // --------------------------------------------------
-    assign is_number_negative = i_instruccion[NB_WORD-1] == 1;
-    assign o_dato_inmediato   = is_number_negative ? {16'b1111111111111111, i_instruccion[15:0]} : {16'b0000000000000000, i_instruccion[15:0]};
+    assign is_immediate_number_negative = i_instruction[NB_WORD-1] == 1;
+    assign data_immediate_signed        = is_immediate_number_negative ? {16'b1111111111111111, i_instruction[15:0]} : {16'b0000000000000000, i_instruction[15:0]};
 
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_campo_op               = i_instruccion[31:26];
-    assign o_dato_direc_branch      = o_dato_inmediato; // FIXME esto wtf ?? esta duplicada la salida
-    assign o_dato_direc_jump        = i_instruccion[25:0];
-    assign o_dato_ra                = i_jump_o_branch ? i_dato_nuevo_pc : salida_de_forwarding_dato_a;
-    assign o_dato_ra_para_condicion = salida_de_forwarding_dato_a;
-    assign o_dato_rb_para_condicion = o_dato_rb;
-    assign o_direccion_rd           = i_instruccion[15:11];
-    assign o_direccion_rs           = i_instruccion[25:21];
-    assign o_direccion_rt           = i_instruccion[20:16];
+    assign o_data_ra                = i_jump_or_branch ? i_next_pc : forwarding_reg_data_a;
+    assign o_data_rb                = forwarding_reg_data_b;
+    assign o_data_a_for_condition   = forwarding_reg_data_a;
+    assign o_data_b_for_condition   = forwarding_reg_data_b;
+    assign o_data_immediate_signed  = data_immediate_signed;
+
+    assign o_reg_select_address_rd  = i_instruction[15:11];
+    assign o_reg_select_address_rs  = i_instruction[25:21];
+    assign o_reg_select_address_rt  = i_instruction[20:16];
+    assign o_control_unit_operation = i_instruction[31:26];
+
+    assign o_data_jump_address      = i_instruction[25:0];
+    assign o_data_branch_address    = data_immediate_signed;
 
 endmodule

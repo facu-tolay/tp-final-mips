@@ -196,57 +196,53 @@ module mips
     // --------------------------------------------------
     instruction_decode u_instruction_decode
     (
-        .i_clock                        (i_clock                    ),
-        .i_reset                        (i_reset || i_pc_reset      ),
-
         // Intruccion
-        .i_instruccion                  (de_if_a_id[63:32]          ), // FIXME pasar a una expresion wire y assign
+        .i_instruction                  (de_if_a_id[63:32]              ), // FIXME pasar a una expresion wire y assign
 
         // Cortocircuito
-        .i_reg_write_id_ex              (de_id_a_ex[2]              ), // FIXME pasar a una expresion wire y assign
-        .i_reg_write_ex_mem             (de_ex_a_mem[2]             ), // FIXME pasar a una expresion wire y assign
-        .i_reg_write_mem_wb             (de_mem_a_wb[1]             ), // FIXME pasar a una expresion wire y assign
-        .i_direc_rd_id_ex               (o_reg_address              ),
-        .i_direc_rd_ex_mem              (de_ex_a_mem[75:71]         ), // FIXME pasar a una expresion wire y assign
-        .i_direc_rd_mem_wb              (direccion_de_wb            ),
-        .i_dato_de_id_ex                (alu_result                 ),
-        .i_dato_de_ex_mem               (o_data_salida_de_memoria   ),
-        .i_dato_de_mem_wb               (dato_salido_wb             ),
+        .i_reg_write_id_ex              (de_id_a_ex[2]                  ), // FIXME pasar a una expresion wire y assign
+        .i_reg_write_ex_mem             (de_ex_a_mem[2]                 ), // FIXME pasar a una expresion wire y assign
+        .i_reg_write_mem_wb             (de_mem_a_wb[1]                 ), // FIXME pasar a una expresion wire y assign
+        .i_direc_rd_id_ex               (o_reg_address                  ),
+        .i_direc_rd_ex_mem              (de_ex_a_mem[75:71]             ), // FIXME pasar a una expresion wire y assign
+        .i_direc_rd_mem_wb              (direccion_de_wb                ),
+        .i_dato_de_id_ex                (alu_result                     ),
+        .i_dato_de_ex_mem               (o_data_salida_de_memoria       ),
+        .i_dato_de_mem_wb               (dato_salido_wb                 ),
 
         // Al registro
-        .i_dato_de_escritura_en_reg     (dato_salido_wb             ),
-        .i_direc_de_escritura_en_reg    (direccion_de_wb            ),
+        .i_write_reg_data               (dato_salido_wb                 ),
+        .i_write_reg_address            (direccion_de_wb                ),
 
         // Para Debug
-        .o_dato_a_debug                 (o_debug_read_reg           ),
-        .i_direc_de_lectura_de_debug    (i_debug_read_reg_address   ),
+        .o_debug_read_reg               (o_debug_read_reg               ),
+        .i_debug_read_reg_address       (i_debug_read_reg_address       ),
 
-        // Para comparar salto
-        .o_dato_ra_para_condicion       (o_dato_ra_para_condicion   ),
-        .o_dato_rb_para_condicion       (o_dato_rb_para_condicion   ),
+        // EQ/NEQ condition for jump or branch
+        .o_data_a_for_condition         (o_dato_ra_para_condicion       ),
+        .o_data_b_for_condition         (o_dato_rb_para_condicion       ),
 
-        // Para Branch
-        .o_dato_direc_branch            (o_dato_direc_branch        ),
+        // Jump and branch addresses
+        .o_data_branch_address          (o_dato_direc_branch            ),
+        .o_data_jump_address            (o_dato_direc_jump              ),
 
-        // Para Jump
-        .o_dato_direc_jump              (o_dato_direc_jump          ),
+        // For return address
+        .i_next_pc                      (de_if_a_id[31:0]               ), // FIXME pasar a una expresion wire y assign
 
-        // Para direccion de retorno
-        .i_dato_nuevo_pc                (de_if_a_id[31:0]           ), // FIXME pasar a una expresion wire y assign
+        // Data
+        .o_data_ra                      (o_dato_ra                      ),
+        .o_data_rb                      (o_dato_rb                      ),
+        .o_data_immediate_signed        (o_dato_inmediato               ),
+        .o_reg_select_address_rs        (o_direccion_rs                 ),
+        .o_reg_select_address_rt        (o_direccion_rt                 ),
+        .o_reg_select_address_rd        (o_direccion_rd                 ),
 
-        // Datos
-        .o_dato_ra                      (o_dato_ra                  ),
-        .o_dato_rb                      (o_dato_rb                  ),
-        .o_dato_inmediato               (o_dato_inmediato           ),
-        .o_direccion_rs                 (o_direccion_rs             ),
-        .o_direccion_rt                 (o_direccion_rt             ),
-        .o_direccion_rd                 (o_direccion_rd             ),
+        // Control signals
+        .o_control_unit_operation       (o_campo_op                     ),
+        .i_jump_or_branch               (control_signals[JMP_OR_BRCH]   ),
 
-        // A control
-        .o_campo_op                     (o_campo_op                 ),
-
-        // Flags de control
-        .i_jump_o_branch                (control_signals[JMP_OR_BRCH]   )
+        .i_reset                        (i_reset || i_pc_reset          ),
+        .i_clock                        (i_clock                        )
     );
 
     // --------------------------------------------------
