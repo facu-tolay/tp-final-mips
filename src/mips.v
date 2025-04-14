@@ -200,15 +200,15 @@ module mips
         .i_instruction                  (de_if_a_id[63:32]              ), // FIXME pasar a una expresion wire y assign
 
         // Cortocircuito
-        .i_reg_write_id_ex              (de_id_a_ex[2]                  ), // FIXME pasar a una expresion wire y assign
-        .i_reg_write_ex_mem             (de_ex_a_mem[2]                 ), // FIXME pasar a una expresion wire y assign
-        .i_reg_write_mem_wb             (de_mem_a_wb[1]                 ), // FIXME pasar a una expresion wire y assign
-        .i_direc_rd_id_ex               (o_reg_address                  ),
-        .i_direc_rd_ex_mem              (de_ex_a_mem[75:71]             ), // FIXME pasar a una expresion wire y assign
-        .i_direc_rd_mem_wb              (direccion_de_wb                ),
-        .i_dato_de_id_ex                (alu_result                     ),
-        .i_dato_de_ex_mem               (o_data_salida_de_memoria       ),
-        .i_dato_de_mem_wb               (dato_salido_wb                 ),
+        .i_reg_enable_write_id_ex       (de_id_a_ex[2]                  ), // FIXME pasar a una expresion wire y assign
+        .i_reg_enable_write_ex_mem      (de_ex_a_mem[2]                 ), // FIXME pasar a una expresion wire y assign
+        .i_reg_enable_write_mem_wb      (de_mem_a_wb[1]                 ), // FIXME pasar a una expresion wire y assign
+        .i_reg_address_rd_id_ex         (o_reg_address                  ),
+        .i_reg_address_rd_ex_mem        (de_ex_a_mem[75:71]             ), // FIXME pasar a una expresion wire y assign
+        .i_reg_address_rd_mem_wb        (direccion_de_wb                ),
+        .i_data_from_execution_stage    (alu_result                     ),
+        .i_data_from_memory_access      (o_data_salida_de_memoria       ),
+        .i_data_from_write_back         (dato_salido_wb                 ),
 
         // Al registro
         .i_write_reg_data               (dato_salido_wb                 ),
