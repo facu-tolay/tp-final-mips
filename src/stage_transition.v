@@ -5,12 +5,12 @@ module stage_transition
     parameter NB_DATA = 32
 )
 (
-    output [NB_DATA -1 : 0] o_data      ,
+    output wire [NB_DATA -1 : 0] o_data      ,
 
-    input  [NB_DATA -1 : 0] i_data      ,
-    input                   i_valid     ,
-    input                   i_reset     ,
-    input                   i_clock
+    input  wire [NB_DATA -1 : 0] i_data      ,
+    input  wire                  i_valid     ,
+    input  wire                  i_reset     ,
+    input  wire                  i_clock
 );
 
     reg [NB_DATA -1 : 0] data_d;
