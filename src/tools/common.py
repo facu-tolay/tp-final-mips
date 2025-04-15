@@ -60,12 +60,12 @@ def test_program(asm_filename, expected_reg_state, expected_mem_state):
     # le da run
     time.sleep(0.5)
     api_du_run_program(serial_port)
-    time.sleep(1)
+    time.sleep(0.25)
 
     if(expected_reg_state != None and len(expected_reg_state) > 0):
         print(f'checking registers ...')
         api_du_read_registers(serial_port)
-        time.sleep(2)
+        time.sleep(1.5)
         mips_registers_status = serial_receive_thread.get_last_received_words()
         print(f'registros del MIPS despues de ejecutar:\n{mips_registers_status}\n')
         test_result = test_result and compare_registers(mips_registers_status, expected_reg_state)
@@ -73,7 +73,7 @@ def test_program(asm_filename, expected_reg_state, expected_mem_state):
     if(expected_mem_state != None and len(expected_mem_state) > 0):
         print(f'checking memory ...')
         api_du_read_memory(serial_port)
-        time.sleep(2)
+        time.sleep(1.5)
         mips_memory_status = serial_receive_thread.get_last_received_words()
         print(f'memoria del MIPS despues de ejecutar:\n{mips_memory_status}\n')
         test_result = test_result and compare_registers(mips_memory_status, expected_mem_state)
@@ -82,7 +82,7 @@ def test_program(asm_filename, expected_reg_state, expected_mem_state):
 
     # borrar programa y reset PC
     api_du_delete_program(serial_port)
-    time.sleep(0.5)
+    time.sleep(0.25)
     api_du_reset_pc(serial_port)
     print("\ntodo borrado, listo para un nuevo run\n")
     return test_result
