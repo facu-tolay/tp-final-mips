@@ -196,10 +196,26 @@ module mips
     // --------------------------------------------------
     instruction_decode u_instruction_decode
     (
+        // Data
+        .o_data_ra                      (o_dato_ra                      ),
+        .o_data_rb                      (o_dato_rb                      ),
+        .o_data_immediate_signed        (o_dato_inmediato               ),
+        .o_reg_select_address_rs        (o_direccion_rs                 ),
+        .o_reg_select_address_rt        (o_direccion_rt                 ),
+        .o_reg_select_address_rd        (o_direccion_rd                 ),
+
+        // EQ/NEQ condition for jump or branch
+        .o_data_a_for_condition         (o_dato_ra_para_condicion       ),
+        .o_data_b_for_condition         (o_dato_rb_para_condicion       ),
+
+        // Jump and branch addresses
+        .o_data_branch_address          (o_dato_direc_branch            ),
+        .o_data_jump_address            (o_dato_direc_jump              ),
+
         // Intruccion
         .i_instruction                  (de_if_a_id[63:32]              ), // FIXME pasar a una expresion wire y assign
 
-        // Cortocircuito
+        // Forwarding
         .i_reg_enable_write_id_ex       (de_id_a_ex[2]                  ), // FIXME pasar a una expresion wire y assign
         .i_reg_enable_write_ex_mem      (de_ex_a_mem[2]                 ), // FIXME pasar a una expresion wire y assign
         .i_reg_enable_write_mem_wb      (de_mem_a_wb[1]                 ), // FIXME pasar a una expresion wire y assign
@@ -210,36 +226,20 @@ module mips
         .i_data_from_memory_access      (o_data_salida_de_memoria       ),
         .i_data_from_write_back         (dato_salido_wb                 ),
 
-        // Al registro
+        // For register bank
         .i_write_reg_data               (dato_salido_wb                 ),
         .i_write_reg_address            (direccion_de_wb                ),
-
-        // Para Debug
-        .o_debug_read_reg               (o_debug_read_reg               ),
-        .i_debug_read_reg_address       (i_debug_read_reg_address       ),
-
-        // EQ/NEQ condition for jump or branch
-        .o_data_a_for_condition         (o_dato_ra_para_condicion       ),
-        .o_data_b_for_condition         (o_dato_rb_para_condicion       ),
-
-        // Jump and branch addresses
-        .o_data_branch_address          (o_dato_direc_branch            ),
-        .o_data_jump_address            (o_dato_direc_jump              ),
 
         // For return address
         .i_next_pc                      (de_if_a_id[31:0]               ), // FIXME pasar a una expresion wire y assign
 
-        // Data
-        .o_data_ra                      (o_dato_ra                      ),
-        .o_data_rb                      (o_dato_rb                      ),
-        .o_data_immediate_signed        (o_dato_inmediato               ),
-        .o_reg_select_address_rs        (o_direccion_rs                 ),
-        .o_reg_select_address_rt        (o_direccion_rt                 ),
-        .o_reg_select_address_rd        (o_direccion_rd                 ),
-
         // Control signals
         .o_control_unit_operation       (o_campo_op                     ),
         .i_jump_or_branch               (control_signals[JMP_OR_BRCH]   ),
+
+        // Debug
+        .o_debug_read_reg               (o_debug_read_reg               ),
+        .i_debug_read_reg_address       (i_debug_read_reg_address       ),
 
         .i_reset                        (i_reset || i_pc_reset          ),
         .i_clock                        (i_clock                        )
