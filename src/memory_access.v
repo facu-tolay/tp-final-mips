@@ -40,17 +40,17 @@ module memory_access
     // --------------------------------------------------
     data_memory u_data_memory
     (
-        .i_data_write               (i_data_write               ),
-        .i_write_enable             (i_write_enable             ),
-        .i_byte_mask                (memory_mask_bits           ), // indicates which bytes to select
-        .i_address                  (i_memory_address           ), // FIXME checkear tamanios
-        .o_data_read                (data_to_sign               ),
+        .i_data_write               (i_data_write                           ),
+        .i_write_enable             (i_write_enable                         ),
+        .i_byte_mask                (memory_mask_bits                       ), // indicates which bytes to select
+        .i_address                  (i_memory_address[NB_MEM_ADDRESS -1 : 0]),
+        .o_data_read                (data_to_sign                           ),
 
-        .i_debug_read_mem_address   (i_debug_read_mem_address   ),
-        .o_debug_read_mem           (o_debug_read_mem           ),
+        .i_debug_read_mem_address   (i_debug_read_mem_address               ),
+        .o_debug_read_mem           (o_debug_read_mem                       ),
 
-        .i_reset                    (i_reset                    ),
-        .i_clock                    (i_clock                    )
+        .i_reset                    (i_reset                                ),
+        .i_clock                    (i_clock                                )
     );
 
     // --------------------------------------------------

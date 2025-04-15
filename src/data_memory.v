@@ -4,17 +4,17 @@ module data_memory
 #(
     parameter NB_DATA       = 32,
     parameter NB_BYTE       = 8,
-    parameter NUM_ENABLES   = NB_DATA / 8,
-    parameter NUM_SLOTS     = 32*4,
-    parameter NUM_DIREC     = $clog2(NUM_SLOTS)
+    parameter NUM_SLOTS     = 32 * 4,
+    parameter NB_ADDRESS    = 7,
+    parameter NB_MASK       = NB_DATA / 8
 )
 (
     input  wire                         i_write_enable,
-    input  wire [NUM_ENABLES    -1 : 0] i_byte_mask,
-    input  wire [NUM_DIREC      -1 : 0] i_address,
+    input  wire [NB_MASK        -1 : 0] i_byte_mask,
+    input  wire [NB_ADDRESS     -1 : 0] i_address,
     input  wire [NB_DATA        -1 : 0] i_data_write,
 
-    input  wire [NUM_DIREC      -1 : 0] i_debug_read_mem_address,
+    input  wire [NB_ADDRESS     -1 : 0] i_debug_read_mem_address,
     output wire [NB_DATA        -1 : 0] o_debug_read_mem,
 
     output wire [NB_DATA        -1 : 0] o_data_read,

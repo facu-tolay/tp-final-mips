@@ -121,37 +121,37 @@ module mips
     assign pc_suma_result = pc_value + 32'h4;
 
     // --------------------------------------------------
-    // Interstage registers IF/ID
+    // Stage transition registers IF/ID
     // --------------------------------------------------
-    latch
+    stage_transition
     #(
-        .BUS_DATA(NB_DATA)
+        .NB_DATA(NB_DATA)
     )
     if_id_latch_pc_mas_cuatro
     (
         .o_data     (de_if_a_id[31:0]               ),
 
         .i_data     (pc_suma_result                 ),
-        .i_enable   (i_enable_stages_transitions[3] && stall_latch),
+        .i_valid    (i_enable_stages_transitions[3] && stall_latch),
         .i_reset    (i_reset || i_pc_reset          ),
         .i_clock    (i_clock                        )
     );
 
-    latch
+    stage_transition
     #(
-        .BUS_DATA(NB_DATA)
+        .NB_DATA(NB_DATA)
     )
     if_id_latch_inst
     (
         .i_clock    (i_clock                                                ),
         .i_reset    (i_reset || (i_enable_stages_transitions[3] && if_flush) || i_pc_reset ),
-        .i_enable   (i_enable_stages_transitions[3] && stall_latch                         ),
+        .i_valid    (i_enable_stages_transitions[3] && stall_latch                         ),
         .i_data     (instruction                                            ),
         .o_data     (de_if_a_id[63:32]                                      )
     );
 
     // --------------------------------------------------
-    // Interstage muxes IF/ID
+    // Stage transition muxes IF/ID
     // --------------------------------------------------
     assign i_eq_neq                = o_dato_ra_para_condicion != o_dato_rb_para_condicion;
     assign mux_eq_neq              = control_signals[EQ_OR_NEQ] ? i_eq_neq : ~i_eq_neq;
@@ -192,7 +192,7 @@ module mips
     );
 
     // --------------------------------------------------
-    // Instruction Decode stage
+    // Instruction decode stage
     // --------------------------------------------------
     instruction_decode u_instruction_decode
     (
@@ -246,17 +246,17 @@ module mips
     );
 
     // --------------------------------------------------
-    // Interstage register for ID/EX
+    // Stage transition register for ID/EX
     // --------------------------------------------------
-    latch
+    stage_transition
     #(
-        .BUS_DATA(120)
+        .NB_DATA(120)
     )
     id_ex_latch
     (
         .i_clock        (i_clock                        ),
         .i_reset        (i_reset || i_pc_reset          ),
-        .i_enable       (i_enable_stages_transitions[2] ),
+        .i_valid        (i_enable_stages_transitions[2] ),
         .i_data         ({o_direccion_rd, o_direccion_rt,o_dato_inmediato, o_dato_rb,   // FIXME pasar a una expresion wire y assign
                           o_dato_ra, control_signals[REG_DST], control_signals[ALU_SRC], control_signals[OP2:OP0],
                           control_signals[SHIFT_SRC], control_signals[DATA_MASK_1:DATA_MASK_0],
@@ -285,17 +285,17 @@ module mips
     );
 
     // --------------------------------------------------
-    // Interstage register for EX/MEM
+    // Stage transition register for EX/MEM
     // --------------------------------------------------
-    latch
+    stage_transition
     #(
-        .BUS_DATA(76)
+        .NB_DATA(76)
     )
     ex_mem_latch
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
-        .i_enable   (i_enable_stages_transitions[1] ),
+        .i_valid    (i_enable_stages_transitions[1] ),
         .i_data     ({o_reg_address, o_mem_data, alu_result, de_id_a_ex[7:5], de_id_a_ex[3:0]}), // FIXME pasar a una expresion wire y assign
         .o_data     (de_ex_a_mem                    )
     );
@@ -322,17 +322,17 @@ module mips
     );
 
     // --------------------------------------------------
-    // Interstage register for MEM/WB
+    // Stage transition register for MEM/WB
     // --------------------------------------------------
-    latch
+    stage_transition
     #(
-        .BUS_DATA(39)
+        .NB_DATA(39)
     )
     mem_wb_latch
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
-        .i_enable   (i_enable_stages_transitions[0] ),
+        .i_valid    (i_enable_stages_transitions[0] ),
         .i_data     ({de_ex_a_mem[75:71], o_data_salida_de_memoria,de_ex_a_mem[2] ,de_ex_a_mem[0]}), // FIXME pasar a una expresion wire y assign
         .o_data     (de_mem_a_wb                    )
     );
