@@ -123,13 +123,21 @@ module mips
     // --------------------------------------------------
     // Stage transition registers IF/ID
     // --------------------------------------------------
+    // FIXME ver si agregar un nombre tipo stage_trstn_if_id
+    wire [NB_DATA       -1 : 0] pc_plus_4_d;
+    wire [NB_DATA       -1 : 0] instruction_d;
+    wire [NB_OP_FIELD   -1 : 0] instruction_function_d;
+
+    assign de_if_a_id             = {instruction_d, pc_plus_4_d};
+    assign instruction_function_d = instruction_d[NB_OP_FIELD-1 : 0];
+
     stage_transition
     #(
         .NB_DATA(NB_DATA)
     )
     if_id_latch_pc_mas_cuatro
     (
-        .o_data     (de_if_a_id[31:0]               ),
+        .o_data     (pc_plus_4_d                    ),
 
         .i_data     (pc_suma_result                 ),
         .i_valid    (i_enable_stages_transitions[3] && stall_latch),
@@ -147,7 +155,7 @@ module mips
         .i_reset    (i_reset || (i_enable_stages_transitions[3] && if_flush) || i_pc_reset ),
         .i_valid    (i_enable_stages_transitions[3] && stall_latch                         ),
         .i_data     (instruction                                            ),
-        .o_data     (de_if_a_id[63:32]                                      )
+        .o_data     (instruction_d                                          )
     );
 
     // --------------------------------------------------
@@ -158,7 +166,7 @@ module mips
 
     assign mux_dir                 = control_signals[JMP_SRC] ? {6'b0,o_dato_direc_jump} << 2 : o_dato_ra_para_condicion;
 
-    assign immediate_suma_result   = de_if_a_id[31 : 0] + $signed(o_dato_direc_branch << 2);
+    assign immediate_suma_result   = pc_plus_4_d + $signed(o_dato_direc_branch << 2);
     assign enable_mux_pc_immediate = mux_eq_neq && control_signals[BRANCH];
     assign mux_pc_immediate        = enable_mux_pc_immediate ? immediate_suma_result : pc_suma_result;
 
@@ -185,7 +193,7 @@ module mips
     // --------------------------------------------------
     control_unit u_control_unit
     (
-        .i_function         (de_if_a_id[37 : 32]    ), // FIXME pasar a una expresion wire y assign
+        .i_function         (instruction_function_d ), // FIXME pasar a una expresion wire y assign
         .i_operation        (o_campo_op             ),
         .i_enable_control   (stall_ctl              ),
         .o_control          (control_signals        )
@@ -213,7 +221,7 @@ module mips
         .o_data_jump_address            (o_dato_direc_jump              ),
 
         // Intruccion
-        .i_instruction                  (de_if_a_id[63:32]              ), // FIXME pasar a una expresion wire y assign
+        .i_instruction                  (instruction_d                  ), // FIXME pasar a una expresion wire y assign
 
         // Forwarding
         .i_reg_enable_write_id_ex       (de_id_a_ex[2]                  ), // FIXME pasar a una expresion wire y assign
@@ -231,7 +239,7 @@ module mips
         .i_write_reg_address            (direccion_de_wb                ),
 
         // For return address
-        .i_next_pc                      (de_if_a_id[31:0]               ), // FIXME pasar a una expresion wire y assign
+        .i_next_pc                      (pc_plus_4_d                    ),
 
         // Control signals
         .o_control_unit_operation       (o_campo_op                     ),
