@@ -210,10 +210,10 @@ module mips
     (
         .i_jump_branch      (control_signals[JMP_OR_BRCH]   ),
         .i_branch           (enable_mux_pc_immediate        ),
-        .i_mem_read_id_ex   (signals_id_to_ex_d[4]          ), // FIXME pasar a una expresion wire y assign
+        .i_mem_read_id_ex   (signals_id_to_ex_d[4]          ),
         .i_rs_if_id         (reg_select_address_rs          ),
         .i_rt_if_id         (reg_select_address_rt          ),
-        .i_rt_id_ex         (signals_id_to_ex_d[114 : 110]  ), // FIXME pasar a una expresion wire y assign
+        .i_rt_id_ex         (signals_id_to_ex_d[114 : 110]  ),
         .o_if_flush         (instruction_fetch_flush        ),
         .o_risk_detected    (stall_ctl                      ),
         .o_no_risk_detected (no_risk_detected               )
@@ -255,11 +255,11 @@ module mips
         .i_instruction                  (instruction_d                  ),
 
         // Forwarding
-        .i_reg_enable_write_id_ex       (signals_id_to_ex_d[2]          ), // FIXME pasar a una expresion wire y assign
-        .i_reg_enable_write_ex_mem      (signals_ex_to_mem_d[2]         ), // FIXME pasar a una expresion wire y assign
-        .i_reg_enable_write_mem_wb      (signals_mem_to_wb_d[1]         ), // FIXME pasar a una expresion wire y assign
+        .i_reg_enable_write_id_ex       (signals_id_to_ex_d[2]          ),
+        .i_reg_enable_write_ex_mem      (signals_ex_to_mem_d[2]         ),
+        .i_reg_enable_write_mem_wb      (signals_mem_to_wb_d[1]         ),
         .i_reg_address_rd_id_ex         (exec_reg_address               ),
-        .i_reg_address_rd_ex_mem        (signals_ex_to_mem_d[75:71]     ), // FIXME pasar a una expresion wire y assign
+        .i_reg_address_rd_ex_mem        (signals_ex_to_mem_d[75:71]     ),
         .i_reg_address_rd_mem_wb        (address_from_write_back        ),
         .i_data_from_execution_stage    (alu_result                     ),
         .i_data_from_memory_access      (data_from_memory               ),
@@ -373,13 +373,13 @@ module mips
     // --------------------------------------------------
     memory_access u_memory_access
     (
-        .i_data_write               (signals_ex_to_mem_d[70:39]     ), // FIXME pasar a una expresion wire y assign
-        .i_data_mask                (signals_ex_to_mem_d[6:5]       ), // FIXME pasar a una expresion wire y assign
-        .i_memory_to_register       (signals_ex_to_mem_d[1]         ), // FIXME pasar a una expresion wire y assign
-        .i_is_unsigned              (signals_ex_to_mem_d[3]         ), // FIXME pasar a una expresion wire y assign
-        .i_write_enable             (signals_ex_to_mem_d[4]         ), // FIXME pasar a una expresion wire y assign
+        .i_data_write               (signals_ex_to_mem_d[70:39]     ),
+        .i_data_mask                (signals_ex_to_mem_d[6:5]       ),
+        .i_memory_to_register       (signals_ex_to_mem_d[1]         ),
+        .i_is_unsigned              (signals_ex_to_mem_d[3]         ),
+        .i_write_enable             (signals_ex_to_mem_d[4]         ),
 
-        .i_memory_address           (signals_ex_to_mem_d[38:7]      ), // FIXME pasar a una expresion wire y assign
+        .i_memory_address           (signals_ex_to_mem_d[38:7]      ),
         .o_data                     (data_from_memory               ),
 
         .i_debug_read_mem_address   (i_debug_read_mem_address       ),
@@ -415,12 +415,13 @@ module mips
     // --------------------------------------------------
     write_back u_write_back
     (
-        .i_data_from_memory             (signals_mem_to_wb_d[33:2]  ), // FIXME pasar a una expresion wire y assign
+        .i_data_from_memory             (signals_mem_to_wb_d[33:2]  ),
 
-        .i_jump_return_dest_register    (signals_mem_to_wb_d[38:34] ), // FIXME pasar a una expresion wire y assign
-        .i_jump_return_dest             (signals_mem_to_wb_d[0]     ), // FIXME pasar a una expresion wire y assign
+        .i_jump_return_dest_register    (signals_mem_to_wb_d[38:34] ),
+        .i_jump_return_dest             (signals_mem_to_wb_d[0]     ),
 
         .o_data_write_back              (data_from_write_back       ),
         .o_address_write_back           (address_from_write_back    )
     );
+
 endmodule
