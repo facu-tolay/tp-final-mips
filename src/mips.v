@@ -10,7 +10,8 @@ module mips
 
     parameter NB_JUMP_ADDRESS       = 26    ,
     parameter NB_OP_FIELD           = 6     ,
-    parameter NB_SIGNALS            = 18
+    parameter NB_CONTROL_SIGNALS    = 18    ,
+    parameter NB_ALU_OP_FIELD       = 3
 )
 (
     output wire [NB_DATA              - 1 : 0]   o_debug_read_reg                ,
@@ -29,98 +30,102 @@ module mips
     input  wire                                  i_clock
 );
 
-    //  17      16      15        14     13      12   11    10    9       8       7       6        5        4        3         2          1        0
-    //RegDst MemToReg MemRead   Branch MemWrite Ope2 Ope1 Ope0 ALUSrc RegWrite ShiftSrc JmpSrc JReturnDst EQorNE DataMask1 DataMask0 IsUnsigned JmpOrBrch
-    localparam  REG_DST         =   17;
-    localparam  MEM_TO_REG      =   16;
-    localparam  MEM_READ        =   15;
-    localparam  BRANCH          =   14;
-    localparam  MEM_WRITE       =   13;
-    localparam  OP2             =   12;
-    localparam  OP1             =   11;
-    localparam  OP0             =   10;
-    localparam  ALU_SRC         =    9;
-    localparam  REG_WRITE       =    8;
-    localparam  SHIFT_SRC       =    7;
-    localparam  JMP_SRC         =    6;
-    localparam  J_RETURN_DST    =    5;
-    localparam  EQ_OR_NEQ       =    4;
-    localparam  DATA_MASK_1     =    3;
-    localparam  DATA_MASK_0     =    2;
-    localparam  IS_UNSIGNED     =    1;
-    localparam  JMP_OR_BRCH     =    0;
+    // --------------------------------------------------
+    // Control signals definition
+    // --------------------------------------------------
+        //   17      16      15        14     13      12   11    10    9       8       7       6        5        4        3         2          1        0
+        // RegDst MemToReg MemRead   Branch MemWrite Ope2 Ope1 Ope0 ALUSrc RegWrite ShiftSrc JmpSrc JReturnDst EQorNE DataMask1 DataMask0 IsUnsigned JmpOrBrch
+        localparam REG_DST          = 17;
+        localparam MEM_TO_REG       = 16;
+        localparam MEM_READ         = 15;
+        localparam BRANCH           = 14;
+        localparam MEM_WRITE        = 13;
+        localparam OP2              = 12;
+        localparam OP1              = 11;
+        localparam OP0              = 10;
+        localparam ALU_SRC          =  9;
+        localparam REG_WRITE        =  8;
+        localparam SHIFT_SRC        =  7;
+        localparam JMP_SRC          =  6;
+        localparam J_RETURN_DST     =  5;
+        localparam EQ_OR_NEQ        =  4;
+        localparam DATA_MASK_1      =  3;
+        localparam DATA_MASK_0      =  2;
+        localparam IS_UNSIGNED      =  1;
+        localparam JMP_OR_BRCH      =  0;
 
-    /*====================================== Instruction fetch  =============================*/
-    wire    [NB_DATA -1:0]              instruction;
-    wire    [NB_DATA -1:0]              pc_value;
-    wire                                mux_eq_neq;
 
-    /*================================= Stage transition IF/ID  =============================*/
-    wire    [NB_DATA  * 2 - 1:0]        de_if_a_id;
-    wire    [NB_DATA       -1:0]        pc_plus_4_d;
-    wire    [NB_DATA       -1:0]        instruction_d;
-    wire    [NB_OP_FIELD   -1:0]        instruction_function_d;
+    // Instruction fetch signals
+    wire [NB_DATA               -1 : 0] instruction;
+    wire [NB_DATA               -1 : 0] pc_value;
+    wire                             mux_eq_neq;
 
-    /*====================================== MUXES IF/ID        =============================*/
-    wire    [NB_DATA -1:0]              next_pc;
-    wire    [NB_DATA -1:0]              mux_dir;
-    wire    [NB_DATA -1:0]              mux_pc_immediate;
+    wire [NB_DATA               -1 : 0] next_pc;
+    wire [NB_DATA               -1 : 0] mux_dir;
+    wire [NB_DATA               -1 : 0] mux_pc_immediate;
 
-    /*====================================== Sumador IMMEDIATE  =============================*/
-    wire    [NB_DATA -1:0]              immediate_suma_result;
+    // Sumador immediate signals
+    wire [NB_DATA               -1 : 0] immediate_suma_result;
 
-    /*====================================== Sumador PC         =============================*/
-    wire    [NB_DATA -1:0]              pc_suma_result;
+    // Control Unit signals
+    wire [NB_CONTROL_SIGNALS    -1 : 0] control_signals;
 
-    /*====================================== Control Unit       =============================*/
-    wire    [NB_SIGNALS-1:0]            control_signals;
+    // Instruction Decode signals
+    wire [NB_DATA               -1 : 0] data_a_for_condition;
+    wire [NB_DATA               -1 : 0] data_b_for_condition;
+    wire [NB_DATA               -1 : 0] data_branch_address;
+    wire [NB_JUMP_ADDRESS       -1 : 0] data_jump_address;
+    wire [NB_DATA               -1 : 0] data_ra;
+    wire [NB_DATA               -1 : 0] data_rb;
+    wire [NB_DATA               -1 : 0] data_immediate_signed;
+    wire [NB_REG_ADDRESS        -1 : 0] reg_select_address_rs;
+    wire [NB_REG_ADDRESS        -1 : 0] reg_select_address_rd;
+    wire [NB_REG_ADDRESS        -1 : 0] reg_select_address_rt;
+    wire [NB_OP_FIELD           -1 : 0] control_unit_operation;
 
-    /*====================================== Instruction Decode =============================*/
-    wire    [NB_DATA -1:0]              o_dato_ra_para_condicion;
-    wire    [NB_DATA -1:0]              o_dato_rb_para_condicion;
-    wire    [NB_DATA -1:0]              o_dato_direc_branch;
-    wire    [NB_JUMP_ADDRESS-1:0]       o_dato_direc_jump;
-    wire    [NB_DATA -1:0]              o_dato_ra;
-    wire    [NB_DATA -1:0]              o_dato_rb;
-    wire    [NB_DATA -1:0]              o_dato_inmediato;
-    wire    [NB_REG_ADDRESS-1:0]        o_direccion_rs;
-    wire    [NB_REG_ADDRESS-1:0]        o_direccion_rd;
-    wire    [NB_REG_ADDRESS-1:0]        o_direccion_rt;
-    wire    [NB_OP_FIELD-1:0]           o_campo_op;
-
-    /*================================= Stage transition ID/EX  =============================*/
-    wire    [120-1:0]                   signals_id_to_ex; // FIXME hacer localparam de este y todos los otros
-    wire    [120-1:0]                   signals_id_to_ex_d;
-
+    // Excecution stage signals
     wire                                shift_source_d;
     wire                                register_destination_d;
     wire                                alu_source_d;
-    wire    [3                 -1 : 0]  alu_operation_d; // FIXME param
-    wire    [NB_DATA           -1 : 0]  ra_data_d;
-    wire    [NB_DATA           -1 : 0]  rb_data_d;
-    wire    [NB_DATA           -1 : 0]  sign_extender_data_d;
-    wire    [NB_REG_ADDRESS    -1 : 0]  rt_address_d;
-    wire    [NB_REG_ADDRESS    -1 : 0]  rd_address_d;
+    wire [NB_ALU_OP_FIELD       -1 : 0] alu_operation_d;
+    wire [NB_DATA               -1 : 0] ra_data_d;
+    wire [NB_DATA               -1 : 0] rb_data_d;
+    wire [NB_DATA               -1 : 0] sign_extender_data_d;
+    wire [NB_REG_ADDRESS        -1 : 0] rt_address_d;
+    wire [NB_REG_ADDRESS        -1 : 0] rd_address_d;
 
-    /*====================================== Excecution         =============================*/
-    wire    [NB_DATA -1:0]              o_mem_data;
-    wire    [NB_DATA -1:0]              alu_result;
-    wire    [NB_REG_ADDRESS-1:0]        o_reg_address;
+    wire [NB_DATA               -1 : 0] data_for_memory;
+    wire [NB_DATA               -1 : 0] alu_result;
+    wire [NB_REG_ADDRESS        -1 : 0] exec_reg_address;
 
-    /*================================= Stage transition EX/MEM =============================*/
-    wire    [76-1:0]                    signals_ex_to_mem_d;
-    wire    [76-1:0]                    signals_ex_to_mem; // FIXME param
+    // Memory Access signals
+    wire [NB_DATA               -1 : 0] data_from_memory;
 
-    /*====================================== Memory Access      =============================*/
-    wire    [NB_DATA -1:0]              o_data_salida_de_memoria;
+    // Write Back signals
+    wire [NB_DATA               -1 : 0] data_from_write_back;
+    wire [NB_REG_ADDRESS        -1 : 0] address_from_write_back;
 
-    /*================================= Stage transition MEM/WB =============================*/
-    wire    [39-1:0]                    signals_mem_to_wb_d; // FIXME param
-    wire    [39-1:0]                    signals_mem_to_wb;
+    // --------------------------------------------------
+    // Stages transitions signals
+    // --------------------------------------------------
+        // Stage transition IF/ID signals
+        wire [NB_DATA * 2       -1 : 0] de_if_a_id;
+        wire [NB_DATA           -1 : 0] pc_plus_4;
+        wire [NB_DATA           -1 : 0] pc_plus_4_d;
+        wire [NB_DATA           -1 : 0] instruction_d;
+        wire [NB_OP_FIELD       -1 : 0] instruction_function_d;
 
-    /*====================================== Write Back         =============================*/
-    wire    [NB_DATA -1:0]              dato_salido_wb;
-    wire    [NB_REG_ADDRESS-1:0]        direccion_de_wb;
+        // Stage transition ID/EX signals
+        wire [120               -1 : 0] signals_id_to_ex; // FIXME hacer localparam de este y todos los otros
+        wire [120               -1 : 0] signals_id_to_ex_d;
+
+        // Stage transition EX/MEM signals
+        wire [76                -1 : 0] signals_ex_to_mem_d;
+        wire [76                -1 : 0] signals_ex_to_mem; // FIXME param
+
+        // Stage transition MEM/WB signals
+        wire [39                -1 : 0] signals_mem_to_wb_d; // FIXME param
+        wire [39                -1 : 0] signals_mem_to_wb;
 
 
     // --------------------------------------------------
@@ -146,7 +151,7 @@ module mips
     // --------------------------------------------------
     // Next PC adder
     // --------------------------------------------------
-    assign pc_suma_result = pc_value + 32'h4;
+    assign pc_plus_4 = pc_value + 32'h4;
 
     // --------------------------------------------------
     // Stage transition registers IF/ID
@@ -162,7 +167,7 @@ module mips
     (
         .o_data     (pc_plus_4_d                    ),
 
-        .i_data     (pc_suma_result                 ),
+        .i_data     (pc_plus_4                      ),
         .i_valid    (i_enable_stages_transitions[3] && stall_latch),
         .i_reset    (i_reset || i_pc_reset          ),
         .i_clock    (i_clock                        )
@@ -184,14 +189,14 @@ module mips
     // --------------------------------------------------
     // Stage transition muxes IF/ID
     // --------------------------------------------------
-    assign i_eq_neq                = o_dato_ra_para_condicion != o_dato_rb_para_condicion;
+    assign i_eq_neq                = data_a_for_condition != data_b_for_condition;
     assign mux_eq_neq              = control_signals[EQ_OR_NEQ] ? i_eq_neq : ~i_eq_neq;
 
-    assign mux_dir                 = control_signals[JMP_SRC] ? {6'b0,o_dato_direc_jump} << 2 : o_dato_ra_para_condicion;
+    assign mux_dir                 = control_signals[JMP_SRC] ? {6'b0,data_jump_address} << 2 : data_a_for_condition;
 
-    assign immediate_suma_result   = pc_plus_4_d + $signed(o_dato_direc_branch << 2);
+    assign immediate_suma_result   = pc_plus_4_d + $signed(data_branch_address << 2);
     assign enable_mux_pc_immediate = mux_eq_neq && control_signals[BRANCH];
-    assign mux_pc_immediate        = enable_mux_pc_immediate ? immediate_suma_result : pc_suma_result;
+    assign mux_pc_immediate        = enable_mux_pc_immediate ? immediate_suma_result : pc_plus_4;
 
     assign next_pc                 = control_signals[JMP_OR_BRCH] ? mux_dir : mux_pc_immediate;
 
@@ -203,8 +208,8 @@ module mips
         .i_jump_branch      (control_signals[JMP_OR_BRCH]),
         .i_branch           (enable_mux_pc_immediate     ),
         .i_mem_read_id_ex   (signals_id_to_ex_d[4]       ), // FIXME pasar a una expresion wire y assign
-        .i_rs_if_id         (o_direccion_rs              ),
-        .i_rt_if_id         (o_direccion_rt              ),
+        .i_rs_if_id         (reg_select_address_rs              ),
+        .i_rt_if_id         (reg_select_address_rt              ),
         .i_rt_id_ex         (signals_id_to_ex_d[114 : 110]), // FIXME pasar a una expresion wire y assign
         .o_if_flush         (if_flush                    ),
         .o_risk_detected    (stall_ctl                   ),
@@ -217,7 +222,7 @@ module mips
     control_unit u_control_unit
     (
         .i_function         (instruction_function_d ),
-        .i_operation        (o_campo_op             ),
+        .i_operation        (control_unit_operation             ),
         .i_enable_control   (stall_ctl              ),
         .o_control          (control_signals        )
     );
@@ -228,44 +233,44 @@ module mips
     instruction_decode u_instruction_decode
     (
         // Data
-        .o_data_ra                      (o_dato_ra                      ),
-        .o_data_rb                      (o_dato_rb                      ),
-        .o_data_immediate_signed        (o_dato_inmediato               ),
-        .o_reg_select_address_rs        (o_direccion_rs                 ),
-        .o_reg_select_address_rt        (o_direccion_rt                 ),
-        .o_reg_select_address_rd        (o_direccion_rd                 ),
+        .o_data_ra                      (data_ra                        ),
+        .o_data_rb                      (data_rb                        ),
+        .o_data_immediate_signed        (data_immediate_signed          ),
+        .o_reg_select_address_rs        (reg_select_address_rs          ),
+        .o_reg_select_address_rt        (reg_select_address_rt          ),
+        .o_reg_select_address_rd        (reg_select_address_rd          ),
 
         // EQ/NEQ condition for jump or branch
-        .o_data_a_for_condition         (o_dato_ra_para_condicion       ),
-        .o_data_b_for_condition         (o_dato_rb_para_condicion       ),
+        .o_data_a_for_condition         (data_a_for_condition           ),
+        .o_data_b_for_condition         (data_b_for_condition           ),
 
         // Jump and branch addresses
-        .o_data_branch_address          (o_dato_direc_branch            ),
-        .o_data_jump_address            (o_dato_direc_jump              ),
+        .o_data_branch_address          (data_branch_address            ),
+        .o_data_jump_address            (data_jump_address              ),
 
         // Intruccion
         .i_instruction                  (instruction_d                  ),
 
         // Forwarding
-        .i_reg_enable_write_id_ex       (signals_id_to_ex_d[2]                  ), // FIXME pasar a una expresion wire y assign
-        .i_reg_enable_write_ex_mem      (signals_ex_to_mem_d[2]                 ), // FIXME pasar a una expresion wire y assign
-        .i_reg_enable_write_mem_wb      (signals_mem_to_wb_d[1]                 ), // FIXME pasar a una expresion wire y assign
-        .i_reg_address_rd_id_ex         (o_reg_address                  ),
-        .i_reg_address_rd_ex_mem        (signals_ex_to_mem_d[75:71]             ), // FIXME pasar a una expresion wire y assign
-        .i_reg_address_rd_mem_wb        (direccion_de_wb                ),
+        .i_reg_enable_write_id_ex       (signals_id_to_ex_d[2]          ), // FIXME pasar a una expresion wire y assign
+        .i_reg_enable_write_ex_mem      (signals_ex_to_mem_d[2]         ), // FIXME pasar a una expresion wire y assign
+        .i_reg_enable_write_mem_wb      (signals_mem_to_wb_d[1]         ), // FIXME pasar a una expresion wire y assign
+        .i_reg_address_rd_id_ex         (exec_reg_address                  ),
+        .i_reg_address_rd_ex_mem        (signals_ex_to_mem_d[75:71]     ), // FIXME pasar a una expresion wire y assign
+        .i_reg_address_rd_mem_wb        (address_from_write_back                ),
         .i_data_from_execution_stage    (alu_result                     ),
-        .i_data_from_memory_access      (o_data_salida_de_memoria       ),
-        .i_data_from_write_back         (dato_salido_wb                 ),
+        .i_data_from_memory_access      (data_from_memory       ),
+        .i_data_from_write_back         (data_from_write_back                 ),
 
         // For register bank
-        .i_write_reg_data               (dato_salido_wb                 ),
-        .i_write_reg_address            (direccion_de_wb                ),
+        .i_write_reg_data               (data_from_write_back                 ),
+        .i_write_reg_address            (address_from_write_back                ),
 
         // For return address
         .i_next_pc                      (pc_plus_4_d                    ),
 
-        // Control signals
-        .o_control_unit_operation       (o_campo_op                     ),
+        // Control unit signals
+        .o_control_unit_operation       (control_unit_operation                     ),
         .i_jump_or_branch               (control_signals[JMP_OR_BRCH]   ),
 
         // Debug
@@ -279,11 +284,11 @@ module mips
     // --------------------------------------------------
     // Stage transition register for ID/EX
     // --------------------------------------------------
-    assign signals_id_to_ex = { o_direccion_rd                              ,
-                                o_direccion_rt                              ,
-                                o_dato_inmediato                            ,
-                                o_dato_rb                                   ,
-                                o_dato_ra                                   ,
+    assign signals_id_to_ex = { reg_select_address_rd                              ,
+                                reg_select_address_rt                              ,
+                                data_immediate_signed                            ,
+                                data_rb                                   ,
+                                data_ra                                   ,
                                 control_signals[REG_DST]                    ,
                                 control_signals[ALU_SRC]                    ,
                                 control_signals[OP2 : OP0]                  ,
@@ -333,16 +338,16 @@ module mips
         .i_sign_extender_data   (sign_extender_data_d           ),
         .i_rt_address           (rt_address_d                   ),
         .i_rd_address           (rd_address_d                   ),
-        .o_register_address     (o_reg_address                  ),
-        .o_memory_data          (o_mem_data                     ),
+        .o_register_address     (exec_reg_address                  ),
+        .o_memory_data          (data_for_memory                ),
         .o_alu_result           (alu_result                     )
     );
 
     // --------------------------------------------------
     // Stage transition register for EX/MEM
     // --------------------------------------------------
-    assign signals_ex_to_mem = { o_reg_address              ,
-                                 o_mem_data                 ,
+    assign signals_ex_to_mem = { exec_reg_address              ,
+                                 data_for_memory            ,
                                  alu_result                 ,
                                  signals_id_to_ex_d[7:5]    ,
                                  signals_id_to_ex_d[3:0]    };
@@ -372,7 +377,7 @@ module mips
         .i_write_enable             (signals_ex_to_mem_d[4]           ), // FIXME pasar a una expresion wire y assign
 
         .i_memory_address           (signals_ex_to_mem_d[38:7]        ), // FIXME pasar a una expresion wire y assign
-        .o_data                     (o_data_salida_de_memoria ),
+        .o_data                     (data_from_memory ),
 
         .i_debug_read_mem_address   (i_debug_read_mem_address ),
         .o_debug_read_mem           (o_debug_read_mem         ),
@@ -385,7 +390,7 @@ module mips
     // Stage transition register for MEM/WB
     // --------------------------------------------------
     assign signals_mem_to_wb = { signals_ex_to_mem_d[75:71]     ,
-                                 o_data_salida_de_memoria       ,
+                                 data_from_memory       ,
                                  signals_ex_to_mem_d[2]         ,
                                  signals_ex_to_mem_d[0]         };
 
@@ -412,7 +417,7 @@ module mips
         .i_jump_return_dest_register    (signals_mem_to_wb_d[38:34] ), // FIXME pasar a una expresion wire y assign
         .i_jump_return_dest             (signals_mem_to_wb_d[0]     ), // FIXME pasar a una expresion wire y assign
 
-        .o_data_write_back              (dato_salido_wb     ),
-        .o_address_write_back           (direccion_de_wb    )
+        .o_data_write_back              (data_from_write_back     ),
+        .o_address_write_back           (address_from_write_back    )
     );
 endmodule

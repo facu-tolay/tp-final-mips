@@ -2,22 +2,22 @@
 
 module control_unit
 #(
-    parameter NB_FUNCTION = 6   ,
-    parameter NB_CONTROL  = 18
+    parameter NB_FUNCTION           = 6     ,
+    parameter NB_CONTROL_SIGNALS    = 18
 )
 (
-    output wire [NB_CONTROL     - 1 : 0] o_control          ,
+    output wire [NB_CONTROL_SIGNALS -1 : 0] o_control          ,
 
-    input  wire [NB_FUNCTION    - 1 : 0] i_function         ,
-    input  wire [NB_FUNCTION    - 1 : 0] i_operation        ,
-    input  wire                          i_enable_control
+    input  wire [NB_FUNCTION        -1 : 0] i_function         ,
+    input  wire [NB_FUNCTION        -1 : 0] i_operation        ,
+    input  wire                             i_enable_control
 );
 
     // Control signals definition
     //  17      16      15        14     13      12   11    10    9       8       7       6        5        4        3         2          1        0
     //RegDst MemToReg MemRead   Branch MemWrite Ope2 Ope1 Ope0 ALUSrc RegWrite ShiftSrc JmpSrc JReturnDst EQorNE DataMask1 DataMask0 IsUnsigned JmpOrBrch
 
-    reg [NB_CONTROL - 1 : 0] o_control_data;
+    reg [NB_CONTROL_SIGNALS -1 : 0] o_control_data;
 
     // --------------------------------------------------
     // Main block
