@@ -4,9 +4,9 @@ module instruction_memory
 #(
     parameter NB_DATA           = 32                        ,
     parameter NB_BYTE           = 8                         ,
-    parameter N_INSTRUCTIONS    = 64                        ,
+    parameter N_INSTRUCTIONS    = 32                        ,
     parameter N_BYTE_REGISTERS  = N_INSTRUCTIONS * 4        ,
-    parameter NB_ADDRESS        = $clog2(N_BYTE_REGISTERS)
+    parameter NB_ADDRESS        = 7
 )
 (
     output wire [NB_DATA    -1 : 0]     o_read_instruction          ,
@@ -20,32 +20,19 @@ module instruction_memory
 );
 
     reg [NB_BYTE    -1 : 0] instr_memory [N_BYTE_REGISTERS -1 : 0];
-    reg [NB_ADDRESS -1 : 0] reg_write_ptr;
-    reg [NB_ADDRESS -1 : 0] next_write_ptr;
-    reg [NB_ADDRESS -1 : 0] succ_write_ptr;
-    reg [NB_DATA    -1 : 0] reg_intruccion;
+    reg [NB_ADDRESS -1 : 0] write_address;
+    reg [NB_DATA    -1 : 0] read_instruction;
     integer                 i;
-
-    // --------------------------------------------------
-    // Next pointer block
-    // --------------------------------------------------
-    always @(*) begin
-        succ_write_ptr = reg_write_ptr + 1; // successive pointer values
-        next_write_ptr = reg_write_ptr; // default: keep old values
-        if(i_write_enable) begin
-            next_write_ptr = succ_write_ptr;
-        end
-    end
 
     // --------------------------------------------------
     // Write pointer block
     // --------------------------------------------------
     always @(posedge i_clock) begin
         if (i_reset) begin
-            reg_write_ptr <= 0;
+            write_address <= 0;
         end
-        else begin
-            reg_write_ptr <= next_write_ptr;
+        else if (i_write_enable) begin
+            write_address <= write_address + 1;
         end
     end
 
@@ -59,7 +46,7 @@ module instruction_memory
             end
         end
         else if (i_write_enable) begin
-            instr_memory[reg_write_ptr] <= i_write_data;
+            instr_memory[write_address] <= i_write_data;
         end
     end
 
@@ -67,17 +54,17 @@ module instruction_memory
     // Instruction memory read block
     // --------------------------------------------------
     always @ (negedge i_clock) begin
-        reg_intruccion <= { instr_memory[i_read_address_instruction + 0],
-                            instr_memory[i_read_address_instruction + 1],
-                            instr_memory[i_read_address_instruction + 2],
-                            instr_memory[i_read_address_instruction + 3]};
+        read_instruction <= { instr_memory[i_read_address_instruction + 0],
+                              instr_memory[i_read_address_instruction + 1],
+                              instr_memory[i_read_address_instruction + 2],
+                              instr_memory[i_read_address_instruction + 3]};
     end
 
     // --------------------------------------------------
     // Output assignments
     // --------------------------------------------------
-    assign o_is_program_end   = (reg_write_ptr+12 <= i_read_address_instruction) || ({NB_ADDRESS{1'b1}}-3 == i_read_address_instruction);
-    assign o_read_instruction = reg_intruccion;
+    assign o_is_program_end   = (write_address+12 <= i_read_address_instruction) || ({NB_ADDRESS{1'b1}}-3 == i_read_address_instruction);
+    assign o_read_instruction = read_instruction;
 
 endmodule
 

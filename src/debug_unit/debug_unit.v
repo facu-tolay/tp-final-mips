@@ -351,7 +351,7 @@ module debug_unit
                         load_program_byte_next  = i_uart_receive_byte;
                         led_next                = i_uart_receive_byte;
 
-                        if(instruction_counter == 0 && i_uart_receive_byte[6] == 1) begin // FIXME hacer que esto sea directamente una escritura de 32b
+                        if(instruction_counter == 0 && i_uart_receive_byte[6] == 1) begin
                             load_program_write_next = 1'b0;
                             is_program_loaded_next  = 1'b1;
                             state_next              = IDLE_STATE;
