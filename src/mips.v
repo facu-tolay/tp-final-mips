@@ -58,14 +58,17 @@ module mips
     // Instruction fetch signals
     wire [NB_DATA               -1 : 0] instruction;
     wire [NB_DATA               -1 : 0] pc_value;
-    wire                                mux_eq_neq;
 
     wire [NB_DATA               -1 : 0] next_pc;
     wire [NB_DATA               -1 : 0] mux_dir;
     wire [NB_DATA               -1 : 0] mux_pc_immediate;
+    wire [NB_DATA               -1 : 0] pc_plus_branch_address;
 
-    // Sumador immediate signals
-    wire [NB_DATA               -1 : 0] immediate_suma_result;
+    wire                                mux_eq_neq;
+    wire                                eq_neq_condition;
+    wire                                enable_mux_pc_immediate;
+    wire                                instruction_fetch_flush;
+    wire                                no_risk_detected;
 
     // Control Unit signals
     wire [NB_CONTROL_SIGNALS    -1 : 0] control_signals;
@@ -109,7 +112,7 @@ module mips
     // Stages transitions signals
     // --------------------------------------------------
         // Stage transition IF/ID signals
-        wire [NB_DATA * 2       -1 : 0] de_if_a_id;
+        wire [NB_DATA * 2       -1 : 0] signals_if_to_id;
         wire [NB_DATA           -1 : 0] pc_plus_4;
         wire [NB_DATA           -1 : 0] pc_plus_4_d;
         wire [NB_DATA           -1 : 0] instruction_d;
@@ -138,7 +141,7 @@ module mips
         .o_pc_value                 (pc_value                       ),
 
         .i_pc_reset                 (i_pc_reset                     ),
-        .i_stall                    (i_enable_stages_transitions[4] && stall_latch ),
+        .i_stall                    (i_enable_stages_transitions[4] && no_risk_detected ),
         .i_next_pc                  (next_pc                        ),
         .i_load_program_write_enable(i_load_program_write_enable    ),
         .i_load_program_byte        (i_load_program_byte            ),
@@ -156,7 +159,7 @@ module mips
     // --------------------------------------------------
     // Stage transition registers IF/ID
     // --------------------------------------------------
-    assign de_if_a_id             = {instruction_d, pc_plus_4_d};
+    assign signals_if_to_id             = {instruction_d, pc_plus_4_d};
     assign instruction_function_d = instruction_d[NB_OP_FIELD-1 : 0];
 
     stage_transition
@@ -165,12 +168,12 @@ module mips
     )
     u_stage_transition_if_to_id_pc_plus_4
     (
-        .o_data     (pc_plus_4_d                    ),
+        .o_data     (pc_plus_4_d                                            ),
 
-        .i_data     (pc_plus_4                      ),
-        .i_valid    (i_enable_stages_transitions[3] && stall_latch),
-        .i_reset    (i_reset || i_pc_reset          ),
-        .i_clock    (i_clock                        )
+        .i_data     (pc_plus_4                                              ),
+        .i_valid    (i_enable_stages_transitions[3] && no_risk_detected     ),
+        .i_reset    (i_reset || i_pc_reset                                  ),
+        .i_clock    (i_clock                                                )
     );
 
     stage_transition
@@ -180,8 +183,8 @@ module mips
     u_stage_transition_if_to_id_instruction
     (
         .i_clock    (i_clock                                                ),
-        .i_reset    (i_reset || (i_enable_stages_transitions[3] && if_flush) || i_pc_reset ),
-        .i_valid    (i_enable_stages_transitions[3] && stall_latch                         ),
+        .i_reset    (i_reset || (i_enable_stages_transitions[3] && instruction_fetch_flush) || i_pc_reset ),
+        .i_valid    (i_enable_stages_transitions[3] && no_risk_detected     ),
         .i_data     (instruction                                            ),
         .o_data     (instruction_d                                          )
     );
@@ -189,14 +192,14 @@ module mips
     // --------------------------------------------------
     // Stage transition muxes IF/ID
     // --------------------------------------------------
-    assign i_eq_neq                = data_a_for_condition != data_b_for_condition;
-    assign mux_eq_neq              = control_signals[EQ_OR_NEQ] ? i_eq_neq : ~i_eq_neq;
+    assign eq_neq_condition        = data_a_for_condition != data_b_for_condition;
+    assign mux_eq_neq              = control_signals[EQ_OR_NEQ] ? eq_neq_condition : ~eq_neq_condition;
 
-    assign mux_dir                 = control_signals[JMP_SRC] ? {6'b0,data_jump_address} << 2 : data_a_for_condition;
+    assign mux_dir                 = control_signals[JMP_SRC] ? {6'b0, data_jump_address} << 2 : data_a_for_condition;
 
-    assign immediate_suma_result   = pc_plus_4_d + $signed(data_branch_address << 2);
+    assign pc_plus_branch_address  = pc_plus_4_d + $signed(data_branch_address << 2);
     assign enable_mux_pc_immediate = mux_eq_neq && control_signals[BRANCH];
-    assign mux_pc_immediate        = enable_mux_pc_immediate ? immediate_suma_result : pc_plus_4;
+    assign mux_pc_immediate        = enable_mux_pc_immediate ? pc_plus_branch_address : pc_plus_4;
 
     assign next_pc                 = control_signals[JMP_OR_BRCH] ? mux_dir : mux_pc_immediate;
 
@@ -211,9 +214,9 @@ module mips
         .i_rs_if_id         (reg_select_address_rs          ),
         .i_rt_if_id         (reg_select_address_rt          ),
         .i_rt_id_ex         (signals_id_to_ex_d[114 : 110]  ), // FIXME pasar a una expresion wire y assign
-        .o_if_flush         (if_flush                       ),
+        .o_if_flush         (instruction_fetch_flush        ),
         .o_risk_detected    (stall_ctl                      ),
-        .o_no_risk_detected (stall_latch                    )
+        .o_no_risk_detected (no_risk_detected               )
     );
 
     // --------------------------------------------------
@@ -317,11 +320,11 @@ module mips
     )
     u_stage_transition_id_to_ex
     (
-        .i_clock        (i_clock                        ),
-        .i_reset        (i_reset || i_pc_reset          ),
-        .i_valid        (i_enable_stages_transitions[2] ),
-        .i_data         (signals_id_to_ex               ),
-        .o_data         (signals_id_to_ex_d             )
+        .i_clock                (i_clock                        ),
+        .i_reset                (i_reset || i_pc_reset          ),
+        .i_valid                (i_enable_stages_transitions[2] ),
+        .i_data                 (signals_id_to_ex               ),
+        .o_data                 (signals_id_to_ex_d             )
     );
 
     // --------------------------------------------------
@@ -358,11 +361,11 @@ module mips
     )
     u_stage_transition_ex_to_mem
     (
-        .i_clock    (i_clock                        ),
-        .i_reset    (i_reset || i_pc_reset          ),
-        .i_valid    (i_enable_stages_transitions[1] ),
-        .i_data     (signals_ex_to_mem              ),
-        .o_data     (signals_ex_to_mem_d            )
+        .i_clock                (i_clock                        ),
+        .i_reset                (i_reset || i_pc_reset          ),
+        .i_valid                (i_enable_stages_transitions[1] ),
+        .i_data                 (signals_ex_to_mem              ),
+        .o_data                 (signals_ex_to_mem_d            )
     );
 
     // --------------------------------------------------
