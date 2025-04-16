@@ -57,6 +57,9 @@ module mips
 
     /*================================= Stage transition IF/ID  =============================*/
     wire    [NB_DATA  * 2 - 1:0]        de_if_a_id;
+    wire    [NB_DATA       -1:0]        pc_plus_4_d;
+    wire    [NB_DATA       -1:0]        instruction_d;
+    wire    [NB_OP_FIELD   -1:0]        instruction_function_d;
 
     /*====================================== MUXES IF/ID        =============================*/
     wire    [NB_DATA -1:0]              next_pc;
@@ -88,6 +91,16 @@ module mips
     /*================================= Stage transition ID/EX  =============================*/
     wire    [120-1:0]                   signals_id_to_ex; // FIXME hacer localparam de este y todos los otros
     wire    [120-1:0]                   signals_id_to_ex_d;
+
+    wire                                shift_source_d;
+    wire                                register_destination_d;
+    wire                                alu_source_d;
+    wire    [3                 -1 : 0]  alu_operation_d; // FIXME param
+    wire    [NB_DATA           -1 : 0]  ra_data_d;
+    wire    [NB_DATA           -1 : 0]  rb_data_d;
+    wire    [NB_DATA           -1 : 0]  sign_extender_data_d;
+    wire    [NB_REG_ADDRESS    -1 : 0]  rt_address_d;
+    wire    [NB_REG_ADDRESS    -1 : 0]  rd_address_d;
 
     /*====================================== Excecution         =============================*/
     wire    [NB_DATA -1:0]              o_mem_data;
@@ -138,11 +151,6 @@ module mips
     // --------------------------------------------------
     // Stage transition registers IF/ID
     // --------------------------------------------------
-    // FIXME ver si agregar un nombre tipo stage_trstn_if_id
-    wire [NB_DATA       -1 : 0] pc_plus_4_d;
-    wire [NB_DATA       -1 : 0] instruction_d;
-    wire [NB_OP_FIELD   -1 : 0] instruction_function_d;
-
     assign de_if_a_id             = {instruction_d, pc_plus_4_d};
     assign instruction_function_d = instruction_d[NB_OP_FIELD-1 : 0];
 
@@ -288,16 +296,6 @@ module mips
                                 control_signals[MEM_TO_REG]                 ,
                                 control_signals[J_RETURN_DST]               };
 
-    wire                            shift_source_d;
-    wire                            register_destination_d;
-    wire                            alu_source_d;
-    wire [3                 -1 : 0] alu_operation_d; // FIXME param
-    wire [NB_DATA           -1 : 0] ra_data_d;
-    wire [NB_DATA           -1 : 0] rb_data_d;
-    wire [NB_DATA           -1 : 0] sign_extender_data_d;
-    wire [NB_REG_ADDRESS    -1 : 0] rt_address_d;
-    wire [NB_REG_ADDRESS    -1 : 0] rd_address_d;
-
     assign rd_address_d           = signals_id_to_ex_d[119:115];
     assign rt_address_d           = signals_id_to_ex_d[114:110];
     assign sign_extender_data_d   = signals_id_to_ex_d[109: 78];
@@ -353,7 +351,7 @@ module mips
     #(
         .NB_DATA(76)
     )
-    ex_mem_latch
+    u_stage_transition_ex_to_mem
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
