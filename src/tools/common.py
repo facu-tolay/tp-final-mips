@@ -96,6 +96,8 @@ def compare_registers(current, expected):
     for i in range(0, len(current)):
         compare_result = compare_result and (current[i] == expected[i])
 
+    print(f'\n[COMPARE] expected data: {len(expected)} bytes \n{expected}\n')
+
     print(f"match ? {bcolors.OKGREEN if compare_result==True else bcolors.FAIL} {compare_result} {bcolors.ENDC}")
     return compare_result
 
