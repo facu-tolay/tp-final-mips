@@ -402,7 +402,7 @@ module mips
     #(
         .NB_DATA(39)
     )
-    mem_wb_latch
+    u_stage_transition_mem_to_wb
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),
