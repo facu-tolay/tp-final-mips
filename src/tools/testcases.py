@@ -127,6 +127,19 @@ def testcase_iii_asm():
     test_result = test_program(program_file, expected_registers, expected_memory)
     return test_result
 
+def testcase_jjj_asm():
+    program_file = "./asm_examples/jjj.asm"
+    expected_registers = ["00000000", "00000005", "0000000F", "00000005", "00000044", "00000000", "00000000", "00000000",
+                          "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                          "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                          "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "0000002C"]
+
+    expected_memory    = ["00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                          "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                          "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000",
+                          "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000"]
+    test_result = test_program(program_file, expected_registers, expected_memory)
+    return test_result
 
 def testcase_all():
     regresion_result = True
@@ -139,7 +152,8 @@ def testcase_all():
                       testcase_fff_asm,
                       testcase_ggg_asm,
                       testcase_hhh_asm,
-                      testcase_iii_asm]
+                      testcase_iii_asm,
+                      testcase_jjj_asm]
 
     start_time = time.time()
 

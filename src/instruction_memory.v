@@ -79,32 +79,15 @@ module instruction_memory
     // --------------------------------------------------
     // Instruction memory read block
     // --------------------------------------------------
-    // always @ (negedge i_clock) begin
-    //     read_instruction <= { instr_memory[i_read_address_instruction + 0],
-    //                           instr_memory[i_read_address_instruction + 1],
-    //                           instr_memory[i_read_address_instruction + 2],
-    //                           instr_memory[i_read_address_instruction + 3]};
-    // end
-
     always @ (negedge i_clock) begin
-        // read_instruction <= is_halt_instruction ? 32'h0 :
-        //                     { instr_memory[i_read_address_instruction + 0],
-        //                       instr_memory[i_read_address_instruction + 1],
-        //                       instr_memory[i_read_address_instruction + 2],
-        //                       instr_memory[i_read_address_instruction + 3]};
-        if (is_halt_instruction) begin
+        if (is_halt_instruction || halt_program) begin
             read_instruction <= 32'h0;
         end
         else begin
-            if(halt_program) begin
-                read_instruction <= 32'h0;
-            end
-            else begin
-                read_instruction <= {instr_memory[i_read_address_instruction + 0],
-                                     instr_memory[i_read_address_instruction + 1],
-                                     instr_memory[i_read_address_instruction + 2],
-                                     instr_memory[i_read_address_instruction + 3]};
-            end
+            read_instruction <= {instr_memory[i_read_address_instruction + 0],
+                                 instr_memory[i_read_address_instruction + 1],
+                                 instr_memory[i_read_address_instruction + 2],
+                                 instr_memory[i_read_address_instruction + 3]};
         end
     end
 
