@@ -22,6 +22,7 @@ class Assembler:
                     list(filter(None, re.split(string=formated_line, pattern=gramatical_rules))))
             else:
                 tokens.append(['HALT'])
+        tokens.append(['END'])
         return tokens
 
     # Toma uno de los números de la instrucción o el número de registro y lo pasa a un string binario
@@ -215,6 +216,8 @@ class Assembler:
 
         elif i_name == "HALT":
             inst_bin = "01000000000000000000000000000000"
+        elif i_name == "END":
+            inst_bin = "11110100000000000000000000000000"
         elif i_name == "NOP":
             inst_bin = inst_bin
         else:

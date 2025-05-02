@@ -16,6 +16,7 @@ module instruction_fetch
     input  wire                     i_load_program_write_enable ,
     input  wire                     i_pc_reset                  ,
     input  wire                     i_stall                     ,
+    input  wire                     i_is_jump_or_branch         ,
     input  wire                     i_reset                     ,
     input  wire                     i_clock
 );
@@ -43,6 +44,7 @@ module instruction_fetch
         .o_is_program_end           (o_is_end                               ),
 
         .i_read_address_instruction (next_pc[NB_INSTRUCTION_ADDRESS -1 : 0] ),
+        .i_is_jump_or_branch        (i_is_jump_or_branch                    ),
         .i_write_data               (i_load_program_byte                    ),
         .i_write_enable             (i_load_program_write_enable            ),
         .i_reset                    (i_reset                                ),

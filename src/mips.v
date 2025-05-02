@@ -143,6 +143,7 @@ module mips
         .i_pc_reset                 (i_pc_reset                     ),
         .i_stall                    (i_enable_stages_transitions[4] && no_risk_detected ),
         .i_next_pc                  (next_pc                        ),
+        .i_is_jump_or_branch        (control_signals[JMP_OR_BRCH]   ),
         .i_load_program_write_enable(i_load_program_write_enable    ),
         .i_load_program_byte        (i_load_program_byte            ),
         .i_reset                    (i_reset || i_delete_program    ),
@@ -159,7 +160,7 @@ module mips
     // --------------------------------------------------
     // Stage transition registers IF/ID
     // --------------------------------------------------
-    assign signals_if_to_id             = {instruction_d, pc_plus_4_d};
+    assign signals_if_to_id       = {instruction_d, pc_plus_4_d};
     assign instruction_function_d = instruction_d[NB_OP_FIELD-1 : 0];
 
     stage_transition
@@ -401,7 +402,7 @@ module mips
     #(
         .NB_DATA(39)
     )
-    mem_wb_latch
+    u_stage_transition_mem_to_wb
     (
         .i_clock    (i_clock                        ),
         .i_reset    (i_reset || i_pc_reset          ),

@@ -15,11 +15,14 @@ def main_menu():
         print("\t 5. Testear programa eee.asm")
         print("\t 6. Testear programa fff.asm")
         print("\t 7. Testear programa ggg.asm")
+        print("\t 8. Testear programa hhh.asm")
+        print("\t 9. Testear programa iii.asm")
+        print("\t10. Testear programa jjj.asm")
 
         print("\n---- Control section ----")
-        print("\t 8. Borrar programa")
-        print("\t 9. Reset PC\n")
-        print("\t 0. Read PC")
+        print("\t A. Borrar programa")
+        print("\t B. Reset PC\n")
+        print("\t C. Read PC")
         print("\t R. Read registers")
         print("\t M. Read memory\n")
         print("\t X. Salir")
@@ -42,10 +45,16 @@ def main_menu():
         elif (choice == "7"):
             testcase_ggg_asm()
         elif (choice == "8"):
-            api_du_delete_program(common.serial_port)
+            testcase_hhh_asm()
         elif (choice == "9"):
+            testcase_iii_asm()
+        elif (choice == "10"):
+            testcase_jjj_asm()
+        elif (choice == "A"):
+            api_du_delete_program(common.serial_port)
+        elif (choice == "B"):
             api_du_reset_pc(common.serial_port)
-        elif (choice == "0"):
+        elif (choice == "C"):
             api_du_read_pc(common.serial_port)
         elif (choice == "R"):
             api_du_read_registers(common.serial_port)

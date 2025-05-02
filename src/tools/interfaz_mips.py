@@ -13,18 +13,13 @@ serial_receive_thread = None
 def manage_exception(e):
     logging.error(f'[{__name__}] Exception raised: {repr(e)} | {type(e).__name__}\n@ {__file__}, line {e.__traceback__.tb_lineno}\n')
 
-def enviar_programa_process():
+def enviar_programa_process(asm_filename):
     binary_code = ""
     asm_tokens = []
 
     try:
-        # asm_file = open("./aaa.asm", encoding='utf-8')
-        # asm_file = open("./bbb.asm", encoding='utf-8')
-        # asm_file = open("./ccc.asm", encoding='utf-8')
-        # asm_file = open("./ddd.asm", encoding='utf-8')
-        asm_file = open("./asm_examples/eee.asm", encoding='utf-8')
-        # asm_file = open("./fff.asm", encoding='utf-8')
-        # asm_file = open("./ggg.asm", encoding='utf-8')
+        asm_file_path = "./asm_examples/" + asm_filename
+        asm_file = open(asm_file_path, encoding='utf-8')
         asm_tokens = asm.tokenizer(asm_file)
     finally:
         asm_file.close()
@@ -42,7 +37,6 @@ def enviar_programa_process():
     finally:
         out_file.close()
 
-    # serial_port.write(b'B')
     api_du_enable_load_program(serial_port)
     with open("output_code.hex", "rb") as f:
         while True:
@@ -72,27 +66,21 @@ def main_menu():
         choice = input("Selecciona una opción: ")
 
         if (choice == "1"):
-            enviar_programa_process()
+            asm_filename = input("Archivo a grabar: ")
+            enviar_programa_process(asm_filename)
         elif (choice == "2"):
-            # serial_port.write(b'F')
             api_du_delete_program(serial_port)
         elif (choice == "3"):
-            # serial_port.write(b'C')
             api_du_reset_pc(serial_port)
         elif (choice == "4"):
-            # serial_port.write(b'G')
             api_du_run_program(serial_port)
         elif (choice == "5"):
-            # serial_port.write(b'S')
             api_du_next_step(serial_port)
         elif (choice == "6"):
-            # serial_port.write(b'P')
             api_du_read_pc(serial_port)
         elif (choice == "7"):
-            # serial_port.write(b'R')
             api_du_read_registers(serial_port)
         elif (choice == "8"):
-            # serial_port.write(b'M')
             api_du_read_memory(serial_port)
         elif (choice == "9"):
             print("Catalina: 'gudboye'")

@@ -31,14 +31,16 @@ def enviar_programa_process(asm_filename):
         num = int(binary_code[i*8:(i+1)*8],2)
         num_byte.append(num)
 
+    output_file_name = "output_code_" + asm_filename[-7:].replace(".", "_") + ".hex"
+
     try:
-        out_file = open("./output_code.hex", "wb")
+        out_file = open(output_file_name, "wb")
         out_file.write((''.join(chr(i) for i in num_byte)).encode('charmap'))
     finally:
         out_file.close()
 
     api_du_enable_load_program(serial_port)
-    with open("output_code.hex", "rb") as f:
+    with open(output_file_name, "rb") as f:
         while True:
             data = f.read(8)
             if not data:
@@ -95,6 +97,8 @@ def compare_registers(current, expected):
     compare_result = True
     for i in range(0, len(current)):
         compare_result = compare_result and (current[i] == expected[i])
+
+    print(f'\n[COMPARE] expected data: {len(expected)} bytes \n{expected}\n')
 
     print(f"match ? {bcolors.OKGREEN if compare_result==True else bcolors.FAIL} {compare_result} {bcolors.ENDC}")
     return compare_result
