@@ -15,6 +15,7 @@ module instruction_memory
     input  wire [NB_ADDRESS -1 : 0]     i_read_address_instruction  ,
     input  wire [NB_BYTE    -1 : 0]     i_write_data                ,
     input  wire                         i_write_enable              ,
+    input  wire                         i_is_jump_or_branch         ,
     input  wire                         i_reset                     ,
     input  wire                         i_clock
 );
@@ -23,6 +24,16 @@ module instruction_memory
     reg [NB_ADDRESS -1 : 0] write_address;
     reg [NB_DATA    -1 : 0] read_instruction;
     integer                 i;
+    reg                     halt_program;
+    wire                    is_halt_instruction;
+    wire                    program_halted;
+
+    assign is_halt_instruction = {instr_memory[i_read_address_instruction + 0],
+                                  instr_memory[i_read_address_instruction + 1],
+                                  instr_memory[i_read_address_instruction + 2],
+                                  instr_memory[i_read_address_instruction + 3]} == 32'h40000000;
+
+    assign program_halted      = is_halt_instruction && ~i_is_jump_or_branch;
 
     // --------------------------------------------------
     // Write pointer block
@@ -35,6 +46,21 @@ module instruction_memory
             write_address <= write_address + 1;
         end
     end
+
+    // --------------------------------------------------
+    // Write pointer block
+    // --------------------------------------------------
+    always @(posedge i_clock) begin
+        if (i_reset) begin
+            halt_program <= 1'b0;
+        end
+        else if (program_halted) begin
+            halt_program <= 1'b1;
+        end
+    end
+
+    // aca se podria agregar un mux que meta nops en lugar de seguir leyendo el programa cuando detecte que la instruccion leida es un halt
+    // otra opcion es modificar el write_pointer para que lo setee desde el punto en el que encuentra un halt y asi hace cumplir la condicion de +12 y eso
 
     // --------------------------------------------------
     // Instruction memory write block
@@ -53,11 +79,33 @@ module instruction_memory
     // --------------------------------------------------
     // Instruction memory read block
     // --------------------------------------------------
+    // always @ (negedge i_clock) begin
+    //     read_instruction <= { instr_memory[i_read_address_instruction + 0],
+    //                           instr_memory[i_read_address_instruction + 1],
+    //                           instr_memory[i_read_address_instruction + 2],
+    //                           instr_memory[i_read_address_instruction + 3]};
+    // end
+
     always @ (negedge i_clock) begin
-        read_instruction <= { instr_memory[i_read_address_instruction + 0],
-                              instr_memory[i_read_address_instruction + 1],
-                              instr_memory[i_read_address_instruction + 2],
-                              instr_memory[i_read_address_instruction + 3]};
+        // read_instruction <= is_halt_instruction ? 32'h0 :
+        //                     { instr_memory[i_read_address_instruction + 0],
+        //                       instr_memory[i_read_address_instruction + 1],
+        //                       instr_memory[i_read_address_instruction + 2],
+        //                       instr_memory[i_read_address_instruction + 3]};
+        if (is_halt_instruction) begin
+            read_instruction <= 32'h0;
+        end
+        else begin
+            if(halt_program) begin
+                read_instruction <= 32'h0;
+            end
+            else begin
+                read_instruction <= {instr_memory[i_read_address_instruction + 0],
+                                     instr_memory[i_read_address_instruction + 1],
+                                     instr_memory[i_read_address_instruction + 2],
+                                     instr_memory[i_read_address_instruction + 3]};
+            end
+        end
     end
 
     // --------------------------------------------------

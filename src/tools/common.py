@@ -31,14 +31,16 @@ def enviar_programa_process(asm_filename):
         num = int(binary_code[i*8:(i+1)*8],2)
         num_byte.append(num)
 
+    output_file_name = "output_code_" + asm_filename[-7:].replace(".", "_") + ".hex"
+
     try:
-        out_file = open("./output_code.hex", "wb")
+        out_file = open(output_file_name, "wb")
         out_file.write((''.join(chr(i) for i in num_byte)).encode('charmap'))
     finally:
         out_file.close()
 
     api_du_enable_load_program(serial_port)
-    with open("output_code.hex", "rb") as f:
+    with open(output_file_name, "rb") as f:
         while True:
             data = f.read(8)
             if not data:

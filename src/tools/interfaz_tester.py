@@ -16,6 +16,7 @@ def main_menu():
         print("\t 6. Testear programa fff.asm")
         print("\t 7. Testear programa ggg.asm")
         print("\t 8. Testear programa hhh.asm")
+        print("\t 9. Testear programa iii.asm")
 
         print("\n---- Control section ----")
         print("\t A. Borrar programa")
@@ -44,6 +45,8 @@ def main_menu():
             testcase_ggg_asm()
         elif (choice == "8"):
             testcase_hhh_asm()
+        elif (choice == "9"):
+            testcase_iii_asm()
         elif (choice == "A"):
             api_du_delete_program(common.serial_port)
         elif (choice == "B"):
